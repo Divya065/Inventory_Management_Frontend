@@ -1,0 +1,15 @@
+﻿using Project_1.Dtos.Comment;
+using Project_1.Models;
+
+namespace Project_1.Interface
+{
+    public interface ICommentRepository
+    {
+        Task<List<Comment>> GetAllAsync();
+
+        Task<Comment?> GetByIdAsync(int id);
+        Task<Comment> CreateAsync(Comment commentModel);
+        Task<Comment?> UpdateAsync(int id,Comment commentModel);
+        Task<Comment?> DeleteAsync(int id);
+    }
+}
