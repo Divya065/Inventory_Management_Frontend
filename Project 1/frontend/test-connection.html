@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <button onclick="testConnection()">Test Backend Connection</button>
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test 1: Basic connection
+                const response1 = await fetch('http://localhost:5032/swagger/index.html');
+                resultDiv.innerHTML += `<p>Swagger Test: ${response1.status} ${response1.statusText}</p>`;
+                
+                // Test 2: API endpoint
+                const response2 = await fetch('http://localhost:5032/api/account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ UserName: 'test', Password: 'test' })
+                });
+                resultDiv.innerHTML += `<p>API Test: ${response2.status} ${response2.statusText}</p>`;
+                
+                const data = await response2.text();
+                resultDiv.innerHTML += `<p>Response: ${data}</p>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -15,7 +15,7 @@ namespace Project_1.Controllers
         private readonly IStockRepository _stockRepo;
         private readonly IPortfolioRepository _portfolioRepo;
         public PortfolioController(UserManager<AppUser> userManager,
-            IStockRepository stockRepo,IPortfolioRepository portfolioRepo)
+            IStockRepository stockRepo, IPortfolioRepository portfolioRepo)
         {
             _userManager = userManager;
             _stockRepo = stockRepo;
@@ -47,8 +47,8 @@ namespace Project_1.Controllers
 
             if (userPortfolio.Any(e => e.Symbol.ToLower() == symbol.ToLower()))
                 return BadRequest("Cannot add the samestock to portfolio");
-            
-            var portfolioModel= new Portfolio
+
+            var portfolioModel = new Portfolio
             {
                 StockID = stock.Id,
                 AppUserId = appUser.Id
@@ -76,14 +76,20 @@ namespace Project_1.Controllers
             var userPortfolio = await _portfolioRepo.GetUserPortfolio(appUser);
             var filteredStock = userPortfolio.Where(s => s.Symbol.ToLower() == symbol.ToLower());
 
-            if(filteredStock==null)
-            {
-                await _portfolioRepo.DeletePortfolio(appUser,symbol);
-            }
-            else
+            // Check if the stock exists in the portfolio
+            if (!filteredStock.Any())
             {
                 return BadRequest("Stock not in your portfolio");
             }
+
+            // Stock exists, so delete it
+            var result = await _portfolioRepo.DeletePortfolio(appUser, symbol);
+            
+            if (result == null)
+            {
+                return BadRequest("Failed to remove stock from portfolio");
+            }
+
             return Ok();
         }
     }

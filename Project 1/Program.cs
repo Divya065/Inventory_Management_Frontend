@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 using Project_1.Data;
 using Project_1.Interface;
 using Project_1.Models;
@@ -16,7 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -51,6 +51,8 @@ builder.Services.AddSwaggerGen(option =>
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+    // Use camelCase to match JavaScript conventions
+    options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
 });
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
@@ -64,7 +66,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(Options =>
     Options.Password.RequireLowercase = true;
     Options.Password.RequireUppercase = true;
     Options.Password.RequireNonAlphanumeric = true;
-    Options.Password.RequiredLength = 12;
+    Options.Password.RequiredLength = 8;
 })
 .AddEntityFrameworkStores<ApplicationDBContext>();
 
@@ -84,7 +86,7 @@ builder.Services.AddAuthentication(options => {
         ValidAudience = builder.Configuration["Jwt:Audience"],
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"])
+        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("JWT SigningKey is not configured"))
         )
     };
 });
@@ -92,6 +94,18 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
@@ -102,7 +116,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Use CORS - must be before UseAuthentication and UseAuthorization
+app.UseCors("AllowReactApp");
+
+// Disable HTTPS redirection completely in development
+// This prevents redirects from http://localhost:5032 to https://localhost:7167
 
 app.UseAuthentication();
 app.UseAuthorization();

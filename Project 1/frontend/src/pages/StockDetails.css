@@ -1,0 +1,198 @@
+.stock-details-page {
+  padding: 1rem 0;
+}
+
+.stock-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stock-details-card {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.stock-details-main h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stock-details-main h2 {
+  color: #34495e;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.stock-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+.info-label {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.comments-section {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.comments-header h2 {
+  color: #2c3e50;
+  font-size: 1.8rem;
+}
+
+.comment-form {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 5px;
+  margin-bottom: 2rem;
+}
+
+.comment-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.comment-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.comment-form input:focus,
+.comment-form textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comment-card {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 5px;
+  border-left: 4px solid #667eea;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.comment-header h4 {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.comment-content {
+  color: #34495e;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-container .error {
+  color: #e74c3c;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .stock-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-details-main h1 {
+    font-size: 2rem;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
