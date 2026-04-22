@@ -9,6 +9,8 @@ import StockDetails from './pages/StockDetails'
 import CreateStock from './pages/CreateStock'
 import EditStock from './pages/EditStock'
 import Portfolio from './pages/Portfolio'
+import Transactions from './pages/Transactions'
+import Loans from './pages/Loans'
 import AboutUs from './pages/AboutUs'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -55,10 +57,26 @@ function App() {
               } 
             />
             <Route 
-              path="/portfolio" 
+              path="/cart" 
               element={
                 <ProtectedRoute>
                   <Portfolio />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/transactions" 
+              element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/loans" 
+              element={
+                <ProtectedRoute>
+                  <Loans />
                 </ProtectedRoute>
               } 
             />

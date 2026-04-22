@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
-import { commentService } from '../services/commentService'
+import { offerService } from '../services/offerService'
 import { useAuth } from '../contexts/AuthContext'
 import './StockDetails.css'
 
@@ -10,15 +10,15 @@ const StockDetails = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const [stock, setStock] = useState(null)
-  const [comments, setComments] = useState([])
+  const [offers, setOffers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [commentForm, setCommentForm] = useState({ title: '', content: '' })
-  const [showCommentForm, setShowCommentForm] = useState(false)
+  const [offerForm, setOfferForm] = useState({ title: '', content: '' })
+  const [showOfferForm, setShowOfferForm] = useState(false)
 
   useEffect(() => {
     loadStock()
-    loadComments()
+    loadOffers()
   }, [id])
 
   const loadStock = async () => {
@@ -28,20 +28,20 @@ const StockDetails = () => {
       if (data) {
         setStock(data)
       } else {
-        setError('Stock not found')
+        setError('Item not found')
       }
     } catch (err) {
       console.error('Error loading stock:', err)
-      let errorMessage = 'Failed to load stock details'
+      let errorMessage = 'Failed to load item details'
       
       if (err.response) {
         const status = err.response.status
         if (status === 404) {
-          errorMessage = 'Stock not found'
+          errorMessage = 'Item not found'
         } else if (status === 401) {
           errorMessage = 'You are not authenticated. Please login again.'
         } else if (status === 403) {
-          errorMessage = 'You do not have permission to view this stock.'
+          errorMessage = 'You do not have permission to view this item.'
         } else if (err.response.data?.message) {
           errorMessage = err.response.data.message
         } else {
@@ -57,46 +57,43 @@ const StockDetails = () => {
     }
   }
 
-  const loadComments = async () => {
+  const loadOffers = async () => {
     try {
-      const data = await commentService.getAll()
-      const stockComments = data.filter(c => c.stockId === parseInt(id))
-      setComments(stockComments)
+      const data = await offerService.getAll()
+      const stockOffers = data.filter(c => c.stockId === parseInt(id))
+      setOffers(stockOffers)
     } catch (err) {
-      console.error('Failed to load comments', err)
+      console.error('Failed to load offers', err)
     }
   }
 
-  const handleCommentSubmit = async (e) => {
+  const handleOfferSubmit = async (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      alert('Please login to add comments')
+      alert('Please login to add offers')
       return
     }
 
-    // Validate form data
-    if (!commentForm.title || commentForm.title.trim().length < 5) {
+    if (!offerForm.title || offerForm.title.trim().length < 5) {
       alert('Title must be at least 5 characters long')
       return
     }
-    if (!commentForm.content || commentForm.content.trim().length < 5) {
+    if (!offerForm.content || offerForm.content.trim().length < 5) {
       alert('Content must be at least 5 characters long')
       return
     }
 
-    console.log('Submitting comment:', { stockId: id, commentForm })
-    console.log('Comment form data being sent:', JSON.stringify(commentForm, null, 2))
     try {
-      await commentService.create(id, commentForm)
-      setCommentForm({ title: '', content: '' })
-      setShowCommentForm(false)
-      loadComments()
+      await offerService.create(id, offerForm)
+      setOfferForm({ title: '', content: '' })
+      setShowOfferForm(false)
+      loadOffers()
     } catch (err) {
-      console.error('Comment creation error:', err)
+      console.error('Offer creation error:', err)
       console.error('Error response data:', err.response?.data)
       
       // Extract validation errors from ModelState
-      let errorMessage = 'Failed to create comment'
+      let errorMessage = 'Failed to create offer'
       if (err.response?.data) {
         const data = err.response.data
         // Check for ModelState errors (ASP.NET Core format)
@@ -129,28 +126,28 @@ const StockDetails = () => {
     }
   }
 
-  const handleDeleteComment = async (commentId) => {
-    if (window.confirm('Are you sure you want to delete this comment?')) {
+  const handleDeleteOffer = async (offerId) => {
+    if (window.confirm('Are you sure you want to delete this offer?')) {
       try {
-        await commentService.delete(commentId)
-        await loadComments() // Reload comments after successful deletion
+        await offerService.delete(offerId)
+        await loadOffers()
       } catch (err) {
-        const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete comment'
+        const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete offer'
         alert(`Error: ${errorMsg}`)
-        console.error('Error deleting comment:', err)
+        console.error('Error deleting offer:', err)
       }
     }
   }
 
   if (loading) {
-    return <div className="loading">Loading stock details...</div>
+    return <div className="loading">Loading...</div>
   }
 
   if (error || !stock) {
     return (
       <div className="error-container">
-        <div className="error">{error || 'Stock not found'}</div>
-        <Link to="/stocks" className="btn btn-secondary">Back to Stocks</Link>
+        <div className="error">{error || 'Item not found'}</div>
+        <Link to="/stocks" className="btn btn-secondary">Back to Inventory</Link>
       </div>
     )
   }
@@ -158,10 +155,10 @@ const StockDetails = () => {
   return (
     <div className="stock-details-page">
       <div className="stock-details-header">
-        <Link to="/stocks" className="btn btn-secondary">← Back to Stocks</Link>
+        <Link to="/stocks" className="btn btn-secondary">← Back to Inventory</Link>
         {isAuthenticated && (
           <Link to={`/stocks/${id}/edit`} className="btn btn-primary">
-            Edit Stock
+            Edit Item
           </Link>
         )}
       </div>
@@ -176,20 +173,16 @@ const StockDetails = () => {
               <span className="info-value">#{stock.id}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Industry</span>
-              <span className="info-value">{stock.industry}</span>
+              <span className="info-label">Price (₹)</span>
+              <span className="info-value">₹{stock.price != null ? Number(stock.price).toLocaleString() : 'N/A'}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Purchase Price</span>
-              <span className="info-value">${stock.purchase}</span>
+              <span className="info-label">Quantity</span>
+              <span className="info-value">{stock.quantity != null ? stock.quantity : 'N/A'}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Last Dividend</span>
-              <span className="info-value">${stock.lastDiv}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Market Cap</span>
-              <span className="info-value">${stock.marketCap?.toLocaleString() || 'N/A'}</span>
+              <span className="info-label">Market Price</span>
+              <span className="info-value">₹{stock.marketCap != null ? Number(stock.marketCap).toLocaleString() : 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -197,71 +190,71 @@ const StockDetails = () => {
 
       <div className="comments-section">
         <div className="comments-header">
-          <h2>Comments ({comments.length})</h2>
+          <h2>Offers ({offers.length})</h2>
           {isAuthenticated && (
             <button
-              onClick={() => setShowCommentForm(!showCommentForm)}
+              onClick={() => setShowOfferForm(!showOfferForm)}
               className="btn btn-primary"
             >
-              {showCommentForm ? 'Cancel' : 'Add Comment'}
+              {showOfferForm ? 'Cancel' : 'Add Offer'}
             </button>
           )}
         </div>
 
-        {showCommentForm && isAuthenticated && (
-          <form onSubmit={handleCommentSubmit} className="comment-form">
+        {showOfferForm && isAuthenticated && (
+          <form onSubmit={handleOfferSubmit} className="comment-form">
             <div className="form-group">
-              <label htmlFor="comment-title">Title</label>
+              <label htmlFor="offer-title">Title</label>
               <input
                 type="text"
-                id="comment-title"
-                value={commentForm.title}
-                onChange={(e) => setCommentForm({ ...commentForm, title: e.target.value })}
+                id="offer-title"
+                value={offerForm.title}
+                onChange={(e) => setOfferForm({ ...offerForm, title: e.target.value })}
                 required
-                placeholder="Comment title"
+                placeholder="Offer title"
                 minLength={5}
                 maxLength={280}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="comment-content">Content</label>
+              <label htmlFor="offer-content">Content</label>
               <textarea
-                id="comment-content"
-                value={commentForm.content}
-                onChange={(e) => setCommentForm({ ...commentForm, content: e.target.value })}
+                id="offer-content"
+                value={offerForm.content}
+                onChange={(e) => setOfferForm({ ...offerForm, content: e.target.value })}
                 required
-                placeholder="Write your comment..."
+                placeholder="Write your offer..."
                 rows="4"
                 minLength={5}
                 maxLength={280}
               />
             </div>
-            <button type="submit" className="btn btn-primary">Submit Comment</button>
+            <button type="submit" className="btn btn-primary">Submit Offer</button>
           </form>
         )}
 
-        {comments.length === 0 ? (
-          <div className="no-comments">No comments yet. Be the first to comment!</div>
+        {offers.length === 0 ? (
+          <div className="no-comments">No offers yet. Be the first to add an offer!</div>
         ) : (
           <div className="comments-list">
-            {comments.map((comment) => (
-              <div key={comment.id} className="comment-card">
+            {offers.map((offer) => (
+              <div key={offer.id} className="comment-card">
                 <div className="comment-header">
-                  <h4>{comment.title}</h4>
+                  <h4>{offer.title}</h4>
                   {isAuthenticated && (
                     <button
-                      onClick={() => handleDeleteComment(comment.id)}
+                      onClick={() => handleDeleteOffer(offer.id)}
                       className="btn btn-danger btn-sm"
                     >
                       Delete
                     </button>
                   )}
                 </div>
-                <p className="comment-content">{comment.content}</p>
+                <p className="comment-content">{offer.content}</p>
                 <div className="comment-footer">
-                  <span className="comment-author">By: {comment.createdBy || 'Unknown'}</span>
+                  <span className="comment-author">By: {offer.createdBy || 'Unknown'}</span>
                   <span className="comment-date">
-                    {comment.createdOn ? new Date(comment.createdOn).toLocaleDateString() : 'N/A'}
+                    {offer.createdOn ? new Date(offer.createdOn).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
               </div>

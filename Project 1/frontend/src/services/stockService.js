@@ -2,7 +2,12 @@ import api from './api'
 
 export const stockService = {
   getAll: async (queryParams = {}) => {
-    const response = await api.get('/stock', { params: queryParams })
+    // Avoid cached responses so inventory stays in sync after buy/transaction
+    const params = { ...queryParams, _: Date.now() }
+    const response = await api.get('/stock', {
+      params,
+      headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+    })
     return response.data
   },
 

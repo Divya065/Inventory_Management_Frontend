@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Project_1.Data;
@@ -25,15 +25,31 @@ namespace Project_1.Controllers
 
         [HttpGet]
         [Authorize]
+        [ResponseCache(NoStore = true, Duration = 0, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> GetAll([FromQuery] QuerryObject querry)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (querry == null)
+                    querry = new QuerryObject();
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var stocks = await _stockRepo.GetAllAsync(querry);
+                var StockDto = stocks.Select(s => s.ToStockDto()).ToList();
+                return Ok(StockDto);
             }
-            var stocks = await _stockRepo.GetAllAsync(querry);
-            var StockDto=stocks.Select(s => s.ToStockDto()).ToList();
-            return Ok(StockDto);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Stock GetAll error: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner: {ex.InnerException.Message}");
+                }
+                return StatusCode(500, new { message = "Error loading inventory.", error = ex.Message, inner = ex.InnerException?.Message });
+            }
         }
 
         [HttpGet("{id:int}")]
@@ -88,18 +104,28 @@ namespace Project_1.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> Delete([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
-            var stockModel = await _stockRepo.DeleteAsync(id);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var stockModel = await _stockRepo.DeleteAsync(id);
 
-            if (stockModel == null)
+                if (stockModel == null)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                Console.WriteLine($"Stock Delete error: {ex.Message}");
+                if (ex.InnerException != null)
+                    Console.WriteLine($"Inner: {ex.InnerException.Message}");
+                return StatusCode(500, new { message = "Error deleting item.", error = ex.Message, inner = ex.InnerException?.Message });
             }
-
-            return NoContent();
         }
     }
 }

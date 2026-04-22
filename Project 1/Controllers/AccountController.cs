@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Project_1.Data;
@@ -29,14 +29,20 @@ namespace Project_1.Controllers
 
         //This piece of code is reponsible for login
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto? loginDto)
         {
             try
             {
+                if (loginDto == null)
+                    return BadRequest(new { message = "Request body is missing. Send JSON with UserName and Password." });
+
+                if (string.IsNullOrWhiteSpace(loginDto.UserName) || string.IsNullOrWhiteSpace(loginDto.Password))
+                    return BadRequest(new { message = "UserName and Password are required." });
+
                 if (!ModelState.IsValid)
                     return BadRequest(new { message = "Invalid request data", errors = ModelState });
 
-                var user = await _userManager.Users.FirstOrDefaultAsync(s => s.UserName == loginDto.UserName.ToLower());
+                var user = await _userManager.Users.FirstOrDefaultAsync(s => s.UserName == (loginDto.UserName ?? "").ToLower());
                 if (user == null)
                     return Unauthorized(new { message = "Invalid username or password" });
 
@@ -57,8 +63,8 @@ namespace Project_1.Controllers
                 return Ok(
                     new NewUserDto
                     {
-                        UserName = user.UserName,
-                        Email = user.Email,
+                        UserName = user.UserName ?? "",
+                        Email = user.Email ?? "",
                         Token = token
                     }
                 );

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Project_1.Models
 {
@@ -7,6 +7,7 @@ namespace Project_1.Models
     {
         public String AppUserId { get; set; }
         public int StockID { get; set; }
+        public int Quantity { get; set; } = 1; // How many the user wants in cart
         public AppUser AppUser { get; set; }
         public Stock Stock { get; set; }
     }

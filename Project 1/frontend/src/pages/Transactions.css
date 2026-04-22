@@ -1,0 +1,134 @@
+.transactions-page {
+  padding: 1rem 0;
+}
+
+.transactions-header {
+  margin-bottom: 2rem;
+}
+
+.transactions-header h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+}
+
+.transactions-subtitle {
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.transactions-table-wrapper {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-table th,
+.transactions-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.transactions-table th {
+  background: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.transactions-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background: #f1f3f5;
+}
+
+.transaction-delete-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  border: none;
+  background: transparent;
+  color: #c0392b;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.transaction-delete-icon:hover {
+  background: #fee;
+  color: #e74c3c;
+}
+
+.transaction-delete-icon:focus {
+  outline: none;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.type-badge.type-buy {
+  background: #d4edda;
+  color: #155724;
+}
+
+.type-badge.type-loan {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.error {
+  color: #e74c3c;
+  background: #fee;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .transactions-header h1 {
+    font-size: 2rem;
+  }
+
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}

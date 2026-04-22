@@ -9,9 +9,8 @@ const EditStock = () => {
   const [formData, setFormData] = useState({
     Symbol: '',
     CompanyName: '',
-    Purchase: '',
-    LastDiv: '',
-    Industry: '',
+    Price: '',
+    Quantity: '',
     MarketCap: '',
   })
   const [error, setError] = useState('')
@@ -28,9 +27,8 @@ const EditStock = () => {
       setFormData({
         Symbol: stock.symbol || '',
         CompanyName: stock.companyName || '',
-        Purchase: stock.purchase?.toString() || '',
-        LastDiv: stock.lastDiv?.toString() || '',
-        Industry: stock.industry || '',
+        Price: stock.price?.toString() || '',
+        Quantity: stock.quantity?.toString() || '',
         MarketCap: stock.marketCap?.toString() || '',
       })
       setError('')
@@ -59,9 +57,8 @@ const EditStock = () => {
       const stockData = {
         Symbol: formData.Symbol,
         CompanyName: formData.CompanyName,
-        Purchase: parseFloat(formData.Purchase),
-        LastDiv: parseFloat(formData.LastDiv),
-        Industry: formData.Industry,
+        Price: parseFloat(formData.Price),
+        Quantity: parseInt(formData.Quantity, 10),
         MarketCap: parseInt(formData.MarketCap),
       }
       await stockService.update(id, stockData)
@@ -75,13 +72,13 @@ const EditStock = () => {
   }
 
   if (loadingStock) {
-    return <div className="loading">Loading stock...</div>
+    return <div className="loading">Loading...</div>
   }
 
   return (
     <div className="stock-form-page">
       <div className="stock-form-header">
-        <h1>Edit Stock</h1>
+        <h1>Edit Item</h1>
         <button onClick={() => navigate(`/stocks/${id}`)} className="btn btn-secondary">
           Cancel
         </button>
@@ -121,12 +118,12 @@ const EditStock = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Purchase">Purchase Price *</label>
+              <label htmlFor="Price">Price (₹) *</label>
               <input
                 type="number"
-                id="Purchase"
-                name="Purchase"
-                value={formData.Purchase}
+                id="Price"
+                name="Price"
+                value={formData.Price}
                 onChange={handleChange}
                 required
                 step="0.01"
@@ -136,36 +133,22 @@ const EditStock = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="LastDiv">Last Dividend *</label>
+              <label htmlFor="Quantity">Quantity *</label>
               <input
                 type="number"
-                id="LastDiv"
-                name="LastDiv"
-                value={formData.LastDiv}
+                id="Quantity"
+                name="Quantity"
+                value={formData.Quantity}
                 onChange={handleChange}
                 required
-                step="0.01"
-                min="0"
-                placeholder="0.00"
+                min="1"
+                placeholder="1"
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="Industry">Industry *</label>
-            <input
-              type="text"
-              id="Industry"
-              name="Industry"
-              value={formData.Industry}
-              onChange={handleChange}
-              required
-              placeholder="e.g., Technology"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="MarketCap">Market Cap *</label>
+            <label htmlFor="MarketCap">Market Price *</label>
             <input
               type="number"
               id="MarketCap"
@@ -180,7 +163,7 @@ const EditStock = () => {
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Stock'}
+              {loading ? 'Updating...' : 'Update Item'}
             </button>
             <button
               type="button"

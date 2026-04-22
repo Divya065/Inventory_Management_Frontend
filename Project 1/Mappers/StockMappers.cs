@@ -1,4 +1,4 @@
-﻿using Project_1.Dtos.Stock;
+using Project_1.Dtos.Stock;
 using Project_1.Models;
 
 namespace Project_1.Mappers
@@ -12,11 +12,10 @@ namespace Project_1.Mappers
                 Id = stockModel.Id,
                 Symbol = stockModel.Symbol,
                 CompanyName = stockModel.CompanyName,
-                Purchase = stockModel.Purchase,
-                LastDiv = stockModel.LastDiv,
-                Industry = stockModel.Industry,
+                Price = stockModel.Price,
+                Quantity = stockModel.Quantity,
                 MarketCap = stockModel.MarketCap,
-                Comments = stockModel.Comments.Select(c=>c.ToCommentDto()).ToList(),
+                Offers = (stockModel.Offers ?? new List<Offer>()).Select(c => c.ToOfferDto()).ToList(),
             };
         }
         public static Stock ToCreateFromStockDto(this CreateStockRequestDto stockDto)
@@ -25,9 +24,8 @@ namespace Project_1.Mappers
             {
                 Symbol = stockDto.Symbol,
                 CompanyName = stockDto.CompanyName,
-                Purchase = stockDto.Purchase,
-                LastDiv = stockDto.LastDiv,
-                Industry = stockDto.Industry,
+                Price = stockDto.Price,
+                Quantity = stockDto.Quantity,
                 MarketCap = stockDto.MarketCap
             };
         }

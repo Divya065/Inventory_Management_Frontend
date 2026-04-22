@@ -15,7 +15,7 @@ const Home = () => {
         {!isAuthenticated && (
           <div className="home-actions">
             <Link to="/register" className="btn btn-primary">
-              Get Started
+              Register
             </Link>
             <Link to="/login" className="btn btn-secondary">
               Login
@@ -27,8 +27,8 @@ const Home = () => {
             <Link to="/stocks" className="btn btn-primary">
               View Inventory
             </Link>
-            <Link to="/portfolio" className="btn btn-secondary">
-              My Portfolio
+            <Link to="/cart" className="btn btn-secondary">
+              My Cart
             </Link>
           </div>
         )}
@@ -40,12 +40,12 @@ const Home = () => {
           <p>View, create, and manage your inventory items with ease.</p>
         </div>
         <div className="feature-card">
-          <h3>Portfolio Tracking</h3>
+          <h3>Cart</h3>
           <p>Keep track of all your inventory items in one place.</p>
         </div>
         <div className="feature-card">
           <h3>Team Collaboration</h3>
-          <p>Share and read comments about inventory items with your team.</p>
+          <p>Share and read offers about inventory items with your team.</p>
         </div>
       </div>
     </div>

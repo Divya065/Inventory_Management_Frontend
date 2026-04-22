@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { stockService } from '../services/stockService'
 import { tokenHelper } from '../utils/tokenHelper'
 import './Stocks.css'
@@ -8,14 +8,9 @@ const Stocks = () => {
   const [stocks, setStocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const location = useLocation()
 
-  useEffect(() => {
-    // Load stocks directly on mount
-    console.log('=== Loading Stocks ===')
-    loadStocks()
-  }, [])
-
-  const loadStocks = async () => {
+  const loadStocks = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -81,10 +76,10 @@ const Stocks = () => {
         } else if (status === 403) {
           errorMessage = 'You do not have permission to view stocks. (Error 403: Forbidden)'
         } else if (status === 500) {
-          errorMessage = 'Server error. Please try again later. (Error 500: Internal Server Error)'
-          if (err.response.data?.message) {
-            errorMessage += ` - ${err.response.data.message}`
-          }
+          const data = err.response.data
+          errorMessage = data?.message || 'Server error. Please try again later.'
+          if (data?.error) errorMessage += ` (${data.error})`
+          if (data?.inner) errorMessage += ` [${data.inner}]`
         } else if (err.response.data?.message) {
           errorMessage = `${err.response.data.message} (Error ${status})`
         } else {
@@ -100,10 +95,31 @@ const Stocks = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Refetch on mount and whenever user navigates to Inventory (e.g. after a purchase from Cart)
+  useEffect(() => {
+    if (location.pathname === '/stocks') loadStocks()
+  }, [location.pathname, loadStocks])
+
+  // Refetch when user returns to this tab so inventory stays in sync after purchases elsewhere
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') loadStocks()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [loadStocks])
+
+  // Refetch when a Buy completed (e.g. user had Inventory open and did Buy in another tab, or will navigate here next)
+  useEffect(() => {
+    const onRefresh = () => loadStocks()
+    window.addEventListener('inventory-should-refresh', onRefresh)
+    return () => window.removeEventListener('inventory-should-refresh', onRefresh)
+  }, [loadStocks])
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this stock?')) {
+    if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         setError('') // Clear previous errors
         await stockService.delete(id)
@@ -125,14 +141,14 @@ const Stocks = () => {
   }, [stocks])
 
   if (loading) {
-    return <div className="loading">Loading stocks...</div>
+    return <div className="loading">Loading inventory...</div>
   }
 
   if (error) {
     return (
       <div className="stocks-page">
         <div className="error-container">
-          <h2 style={{ color: '#e74c3c', marginBottom: '1rem' }}>Error Loading Stocks</h2>
+          <h2 style={{ color: '#e74c3c', marginBottom: '1rem' }}>Error Loading Inventory</h2>
           <div className="error">{error}</div>
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             {error.includes('No authentication token') || error.includes('401') || error.includes('not authenticated') ? (
@@ -169,17 +185,28 @@ const Stocks = () => {
   return (
     <div className="stocks-page">
       <div className="stocks-header">
-        <h1>Stocks</h1>
-        <Link to="/stocks/create" className="btn btn-primary">
-          Add New Stock
-        </Link>
+        <h1>Inventory</h1>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={() => loadStocks()}
+            disabled={loading}
+            className="btn btn-secondary"
+            title="Refresh to see updated quantities after a purchase"
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <Link to="/stocks/create" className="btn btn-primary">
+            Add New Item
+          </Link>
+        </div>
       </div>
 
       {stocks.length === 0 ? (
         <div className="empty-state">
-          <p>No stocks found. Create your first stock to get started!</p>
+          <p>No inventory items found. Create your first item to get started!</p>
           <Link to="/stocks/create" className="btn btn-primary">
-            Create Stock
+            Create Item
           </Link>
         </div>
       ) : (
@@ -194,33 +221,31 @@ const Stocks = () => {
                 <p className="stock-company">{stock.companyName || 'N/A'}</p>
                 <div className="stock-details">
                   <div className="stock-detail-item">
-                    <span className="label">Industry:</span>
-                    <span className="value">{stock.industry || 'N/A'}</span>
-                  </div>
-                  <div className="stock-detail-item">
-                    <span className="label">Purchase:</span>
+                    <span className="label">Price:</span>
                     <span className="value">
-                      {stock.purchase != null ? `$${stock.purchase}` : 'N/A'}
+                      {stock.price != null ? `₹${Number(stock.price).toLocaleString()}` : 'N/A'}
                     </span>
                   </div>
                   <div className="stock-detail-item">
-                    <span className="label">Last Div:</span>
+                    <span className="label">Quantity:</span>
                     <span className="value">
-                      {stock.lastDiv != null ? `$${stock.lastDiv}` : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="stock-detail-item">
-                    <span className="label">Market Cap:</span>
-                    <span className="value">
-                      {stock.marketCap != null 
-                        ? `$${stock.marketCap.toLocaleString()}` 
+                      {stock.quantity != null
+                        ? (Number(stock.quantity) === 0 ? 'Out of stock' : stock.quantity)
                         : 'N/A'}
                     </span>
                   </div>
-                  {stock.comments && stock.comments.length > 0 && (
+                  <div className="stock-detail-item">
+                    <span className="label">Market Price:</span>
+                    <span className="value">
+                      {stock.marketCap != null 
+                        ? `₹${stock.marketCap.toLocaleString()}` 
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  {stock.offers && stock.offers.length > 0 && (
                     <div className="stock-detail-item">
-                      <span className="label">Comments:</span>
-                      <span className="value">{stock.comments.length}</span>
+                      <span className="label">Offers:</span>
+                      <span className="value">{stock.offers.length}</span>
                     </div>
                   )}
                 </div>

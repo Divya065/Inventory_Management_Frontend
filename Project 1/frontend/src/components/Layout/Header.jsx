@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import './Header.css'
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const menuRef = useRef(null)
+
+  const isStocksActive = location.pathname.startsWith('/stocks')
 
   const handleLogout = () => {
     logout()
@@ -19,7 +22,6 @@ const Header = () => {
     setShowUserMenu(!showUserMenu)
   }
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -39,10 +41,9 @@ const Header = () => {
   return (
     <header className="header">
       <div className="header-container">
-        <div className="header-left">
+        <div className="header-brand">
           <div className="header-logo">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Inventory/Warehouse Logo - Box with items */}
               <path d="M6 10L16 6L26 10V24C26 25.1 25.1 26 24 26H8C6.9 26 6 25.1 6 24V10Z" fill="white" fillOpacity="0.95"/>
               <path d="M6 10L16 6L26 10" stroke="#667eea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <rect x="9" y="13" width="5" height="5" rx="1" fill="#667eea"/>
@@ -53,7 +54,86 @@ const Header = () => {
           </div>
           <h1 className="header-title">Inventory Management</h1>
         </div>
+
+        <nav className="header-nav">
+          <ul className="header-nav-links">
+            <li>
+              <NavLink
+                to="/"
+                className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                end
+              >
+                Home
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/about"
+                className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+              >
+                About Us
+              </NavLink>
+            </li>
+            {isAuthenticated ? (
+              <>
+                <li>
+                  <NavLink
+                    to="/stocks"
+                    className={isStocksActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Inventory
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/cart"
+                    className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Cart
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/transactions"
+                    className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Transactions
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/loans"
+                    className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Loan
+                  </NavLink>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <NavLink
+                    to="/login"
+                    className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Login
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/register"
+                    className={({ isActive }) => isActive ? 'header-nav-link active' : 'header-nav-link'}
+                  >
+                    Register
+                  </NavLink>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+
         <div className="header-right">
+          <div className="header-user">
           {isAuthenticated && user ? (
             <div className="user-menu-container" ref={menuRef}>
               <div className="user-info">
@@ -82,10 +162,11 @@ const Header = () => {
               )}
             </div>
           ) : (
-            <div className="user-info">
+            <div className="user-info guest">
               <span>Guest User</span>
             </div>
           )}
+          </div>
         </div>
       </div>
     </header>
@@ -93,12 +174,3 @@ const Header = () => {
 }
 
 export default Header
-
-
-
-
-
-
-
-
-

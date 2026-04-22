@@ -104,9 +104,9 @@ export const AuthProvider = ({ children }) => {
             errorMessage = 'Invalid username or password'
           }
         } else if (status === 500) {
-          errorMessage = 'Server error. Please check backend logs.'
-          if (errorData?.message) {
-            errorMessage += ` - ${errorData.message}`
+          errorMessage = errorData?.message || 'Server error. Please check backend logs.'
+          if (errorData?.error) {
+            errorMessage += ` (${errorData.error})`
           }
         } else if (errorData?.message) {
           errorMessage = errorData.message

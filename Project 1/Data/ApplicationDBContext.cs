@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Project_1.Models;
@@ -12,8 +12,10 @@ public class ApplicationDBContext : IdentityDbContext<AppUser>
 
     }
     public DbSet<Stock> Stocks { get; set; }
-    public DbSet<Comment> Comments { get; set; }
+    public DbSet<Offer> Offers { get; set; }
     public DbSet<Portfolio> Portfolios { get; set; }
+    public DbSet<Transaction> Transactions { get; set; }
+    public DbSet<PaymentOrder> PaymentOrders { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

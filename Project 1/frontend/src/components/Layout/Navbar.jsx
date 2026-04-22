@@ -37,15 +37,15 @@ const Navbar = () => {
                   to="/stocks" 
                   className={isStocksActive ? 'nav-link active' : 'nav-link'}
                 >
-                  Stocks
+                  Inventory
                 </NavLink>
               </li>
               <li>
                 <NavLink 
-                  to="/portfolio" 
+                  to="/cart" 
                   className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
                 >
-                  Portfolio
+                  Cart
                 </NavLink>
               </li>
             </>

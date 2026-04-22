@@ -6,9 +6,9 @@ export const portfolioService = {
     return response.data
   },
 
-  addToPortfolio: async (symbol) => {
+  addToPortfolio: async (symbol, quantity = 1) => {
     const response = await api.post('/Portfolio', null, {
-      params: { symbol },
+      params: { symbol, quantity },
     })
     return response.data
   },

@@ -1,4 +1,4 @@
-﻿using Project_1.Dtos.Comment;
+using Project_1.Dtos.Offer;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Project_1.Dtos.Stock
@@ -8,10 +8,9 @@ namespace Project_1.Dtos.Stock
         public int Id { get; set; }
         public String Symbol { get; set; } = String.Empty;
         public string CompanyName { get; set; } = String.Empty;
-        public decimal Purchase { get; set; }
-        public decimal LastDiv { get; set; }
-        public String Industry { get; set; } = String.Empty;
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
         public long MarketCap { get; set; }
-        public List<CommentDto> Comments { get; set; }
+        public List<OfferDto> Offers { get; set; }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
+using Project_1.Configuration;
 using Project_1.Data;
 using Project_1.Interface;
 using Project_1.Models;
@@ -90,10 +91,15 @@ builder.Services.AddAuthentication(options => {
         )
     };
 });
-builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<IOfferRepository, OfferRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IPaymentOrderRepository, PaymentOrderRepository>();
+builder.Services.AddScoped<RazorpayService>();
+builder.Services.Configure<UpiSettings>(builder.Configuration.GetSection("Upi"));
+builder.Services.Configure<RazorpaySettings>(builder.Configuration.GetSection("Razorpay"));
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -108,6 +114,97 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Ensure Offers table exists: rename Comments to Offers if DB still has old name (idempotent)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Comments')
+            AND NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Offers')
+            BEGIN
+                EXEC sp_rename 'Comments', 'Offers';
+            END
+        ");
+    }
+    catch { /* ignore if already applied or not applicable */ }
+
+    // Ensure Transactions table exists (idempotent)
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Transactions')
+            BEGIN
+                CREATE TABLE [Transactions] (
+                    [Id] int NOT NULL IDENTITY(1,1),
+                    [CustomerName] nvarchar(max) NOT NULL,
+                    [Total] decimal(18,2) NOT NULL,
+                    [Type] nvarchar(max) NOT NULL,
+                    [CreatedOn] datetime2 NOT NULL,
+                    [AppUserId] nvarchar(450) NULL,
+                    CONSTRAINT [PK_Transactions] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_Transactions_AspNetUsers_AppUserId] FOREIGN KEY ([AppUserId]) REFERENCES [AspNetUsers] ([Id])
+                );
+                CREATE INDEX [IX_Transactions_AppUserId] ON [Transactions] ([AppUserId]);
+            END;
+
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Transactions' AND COLUMN_NAME = 'ItemsSummary')
+            BEGIN
+                ALTER TABLE [Transactions] ADD [ItemsSummary] nvarchar(max) NULL;
+            END
+
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Transactions' AND COLUMN_NAME = 'PaymentMethod')
+            BEGIN
+                ALTER TABLE [Transactions] ADD [PaymentMethod] nvarchar(20) NULL;
+            END
+        ");
+    }
+    catch { /* ignore if table already exists */ }
+
+    // Ensure PaymentOrders table exists (idempotent)
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'PaymentOrders')
+            BEGIN
+                CREATE TABLE [PaymentOrders] (
+                    [Id] uniqueidentifier NOT NULL,
+                    [Provider] nvarchar(50) NOT NULL,
+                    [ProviderOrderId] nvarchar(200) NOT NULL,
+                    [ProviderPaymentId] nvarchar(200) NULL,
+                    [Amount] decimal(18,2) NOT NULL,
+                    [Currency] nvarchar(10) NOT NULL,
+                    [Status] nvarchar(30) NOT NULL,
+                    [CustomerName] nvarchar(200) NOT NULL,
+                    [ItemsSummary] nvarchar(max) NULL,
+                    [OrderItemsJson] nvarchar(max) NULL,
+                    [CreatedOn] datetime2 NOT NULL,
+                    [PaidOn] datetime2 NULL,
+                    [AppUserId] nvarchar(450) NULL,
+                    CONSTRAINT [PK_PaymentOrders] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_PaymentOrders_AspNetUsers_AppUserId] FOREIGN KEY ([AppUserId]) REFERENCES [AspNetUsers] ([Id])
+                );
+                CREATE INDEX [IX_PaymentOrders_AppUserId] ON [PaymentOrders] ([AppUserId]);
+                CREATE INDEX [IX_PaymentOrders_ProviderOrderId] ON [PaymentOrders] ([ProviderOrderId]);
+            END
+        ");
+    }
+    catch { /* ignore if table already exists */ }
+
+    // Ensure Portfolios has Quantity column (idempotent)
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Portfolios' AND COLUMN_NAME = 'Quantity')
+            BEGIN
+                ALTER TABLE Portfolios ADD Quantity INT NOT NULL DEFAULT 1;
+            END
+        ");
+    }
+    catch { /* ignore if column already exists */ }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -1,7 +1,7 @@
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 0.75rem 2rem;
+  padding: 0.5rem 1.5rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-bottom: 3px solid rgba(255, 255, 255, 0.2);
 }
@@ -10,14 +10,34 @@
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1.5rem;
 }
 
-.header-left {
+/* Left: logo + name */
+.header-brand {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+/* Nav: centered */
+.header-nav {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Right: user only */
+.header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .header-logo {
@@ -46,15 +66,55 @@
 }
 
 .header-title {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  white-space: nowrap;
 }
 
-/* User Menu Styles */
+.header-nav-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.header-nav-links li {
+  margin: 0;
+}
+
+.header-nav-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: white;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.header-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.header-nav-link.active {
+  background-color: white;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.header-nav-link.active:hover {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+}
+
+/* User section (inside .header-right) */
+.header-user {
+  flex-shrink: 0;
+}
+
 .user-menu-container {
   position: relative;
 }
@@ -64,7 +124,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.user-info.guest span {
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .user-avatar {
@@ -101,7 +166,7 @@
 
 .welcome-label {
   color: white;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 400;
   opacity: 0.85;
   text-transform: uppercase;
@@ -111,12 +176,12 @@
 
 .welcome-username {
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
+  max-width: 120px;
   line-height: 1.2;
 }
 
@@ -158,13 +223,45 @@
   color: #e74c3c;
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: 0.75rem 1rem;
+@media (max-width: 900px) {
+  .header-container {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .header-brand {
+    order: 1;
+    flex: 1 1 auto;
+  }
+
+  .header-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-right {
+    order: 2;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+
+  .header-nav-links {
+    flex-wrap: wrap;
   }
 
   .header-title {
     font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.5rem 1rem;
+  }
+
+  .header-title {
+    font-size: 1.1rem;
   }
 
   .header-logo {
@@ -178,29 +275,13 @@
     height: 24px;
   }
 
-  .welcome-label {
-    font-size: 0.7rem;
+  .header-nav-link {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
   }
 
   .welcome-username {
-    font-size: 0.8rem;
-    max-width: 120px;
-  }
-
-  .user-info {
-    padding: 0.5rem;
-  }
-
-  .user-dropdown {
-    right: 0;
+    max-width: 90px;
+    font-size: 0.75rem;
   }
 }
-
-
-
-
-
-
-
-
-

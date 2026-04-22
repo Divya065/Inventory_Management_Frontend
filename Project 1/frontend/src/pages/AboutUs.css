@@ -139,7 +139,7 @@
 }
 
 .tech-category strong {
-  color: #667eea;
+  color: #2c3e50;
 }
 
 /* Structure Info */
@@ -192,7 +192,7 @@
   padding: 1rem;
   background: #e8f5e9;
   border-radius: 6px;
-  color: #2e7d32;
+  color: #2c3e50;
   font-weight: 500;
 }
 
@@ -253,14 +253,14 @@
   padding: 1rem;
   background: #fff3cd;
   border-radius: 6px;
-  color: #856404;
+  color: #2c3e50;
   font-weight: 500;
 }
 
 .footer-note {
   text-align: center;
   font-size: 1.1rem;
-  color: #667eea;
+  color: #2c3e50;
   font-weight: 600;
   margin-top: 2rem;
   padding-top: 2rem;

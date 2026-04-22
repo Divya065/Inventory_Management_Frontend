@@ -51,13 +51,13 @@ namespace Project_1.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "cf336482-1188-4c44-9863-c92587c6d236",
+                            Id = "508c2fbe-de62-458c-9c75-3b21d6b25f01",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "cdafbcc3-596f-4f31-8511-85b96a311471",
+                            Id = "c9e2a7d9-5da2-4b38-be23-dfe9b354d3f0",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -234,7 +234,7 @@ namespace Project_1.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Project_1.Models.Comment", b =>
+            modelBuilder.Entity("Project_1.Models.Offer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -265,7 +265,7 @@ namespace Project_1.Migrations
 
                     b.HasIndex("StockId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Offers");
                 });
 
             modelBuilder.Entity("Project_1.Models.Portfolio", b =>
@@ -295,18 +295,14 @@ namespace Project_1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Industry")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("LastDiv")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<long>("MarketCap")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal>("Purchase")
+                    b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("Symbol")
                         .IsRequired()
@@ -315,6 +311,38 @@ namespace Project_1.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Stocks");
+                });
+
+            modelBuilder.Entity("Project_1.Models.Transaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AppUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppUserId");
+
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -368,17 +396,17 @@ namespace Project_1.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Project_1.Models.Comment", b =>
+            modelBuilder.Entity("Project_1.Models.Offer", b =>
                 {
-                    b.HasOne("Project_1.Models.AppUser", "Appuser")
+                    b.HasOne("Project_1.Models.AppUser", "AppUser")
                         .WithMany()
                         .HasForeignKey("AppUserId");
 
                     b.HasOne("Project_1.Models.Stock", "Stock")
-                        .WithMany("Comments")
+                        .WithMany("Offers")
                         .HasForeignKey("StockId");
 
-                    b.Navigation("Appuser");
+                    b.Navigation("AppUser");
 
                     b.Navigation("Stock");
                 });
@@ -402,6 +430,15 @@ namespace Project_1.Migrations
                     b.Navigation("Stock");
                 });
 
+            modelBuilder.Entity("Project_1.Models.Transaction", b =>
+                {
+                    b.HasOne("Project_1.Models.AppUser", "AppUser")
+                        .WithMany()
+                        .HasForeignKey("AppUserId");
+
+                    b.Navigation("AppUser");
+                });
+
             modelBuilder.Entity("Project_1.Models.AppUser", b =>
                 {
                     b.Navigation("Portfolios");
@@ -409,7 +446,7 @@ namespace Project_1.Migrations
 
             modelBuilder.Entity("Project_1.Models.Stock", b =>
                 {
-                    b.Navigation("Comments");
+                    b.Navigation("Offers");
 
                     b.Navigation("Portfolios");
                 });

@@ -1,4 +1,4 @@
-﻿using Project_1.Dtos.Stock;
+using Project_1.Dtos.Stock;
 using Project_1.Helpers;
 using Project_1.Models;
 
@@ -15,5 +15,6 @@ namespace Project_1.Interface
         Task<Stock?> UpdateAsync(int id,UpdateStockDto stockDto);
         Task<Stock?> DeleteAsync(int id);
         Task<bool> stockExist(int id);
+        Task<bool> ReduceQuantityAsync(int stockId, int amount);
     }
 }

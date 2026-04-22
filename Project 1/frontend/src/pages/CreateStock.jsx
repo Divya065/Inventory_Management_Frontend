@@ -8,9 +8,8 @@ const CreateStock = () => {
   const [formData, setFormData] = useState({
     Symbol: '',
     CompanyName: '',
-    Purchase: '',
-    LastDiv: '',
-    Industry: '',
+    Price: '',
+    Quantity: '',
     MarketCap: '',
   })
   const [error, setError] = useState('')
@@ -32,8 +31,8 @@ const CreateStock = () => {
     try {
       const stockData = {
         ...formData,
-        Purchase: parseFloat(formData.Purchase),
-        LastDiv: parseFloat(formData.LastDiv),
+        Price: parseFloat(formData.Price),
+        Quantity: parseInt(formData.Quantity, 10),
         MarketCap: parseInt(formData.MarketCap),
       }
       const created = await stockService.create(stockData)
@@ -50,7 +49,7 @@ const CreateStock = () => {
   return (
     <div className="stock-form-page">
       <div className="stock-form-header">
-        <h1>Create New Stock</h1>
+        <h1>Create New Item</h1>
         <button onClick={() => navigate('/stocks')} className="btn btn-secondary">
           Cancel
         </button>
@@ -90,12 +89,12 @@ const CreateStock = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Purchase">Purchase Price *</label>
+              <label htmlFor="Price">Price (₹) *</label>
               <input
                 type="number"
-                id="Purchase"
-                name="Purchase"
-                value={formData.Purchase}
+                id="Price"
+                name="Price"
+                value={formData.Price}
                 onChange={handleChange}
                 required
                 step="0.01"
@@ -105,36 +104,22 @@ const CreateStock = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="LastDiv">Last Dividend *</label>
+              <label htmlFor="Quantity">Quantity *</label>
               <input
                 type="number"
-                id="LastDiv"
-                name="LastDiv"
-                value={formData.LastDiv}
+                id="Quantity"
+                name="Quantity"
+                value={formData.Quantity}
                 onChange={handleChange}
                 required
-                step="0.01"
-                min="0"
-                placeholder="0.00"
+                min="1"
+                placeholder="1"
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="Industry">Industry *</label>
-            <input
-              type="text"
-              id="Industry"
-              name="Industry"
-              value={formData.Industry}
-              onChange={handleChange}
-              required
-              placeholder="e.g., Technology"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="MarketCap">Market Cap *</label>
+            <label htmlFor="MarketCap">Market Price *</label>
             <input
               type="number"
               id="MarketCap"
@@ -149,7 +134,7 @@ const CreateStock = () => {
 
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Stock'}
+              {loading ? 'Creating...' : 'Create Item'}
             </button>
             <button
               type="button"
