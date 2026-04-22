@@ -41,6 +41,16 @@ bld/
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 
+# App secrets (keep public repo clean)
+appsettings.json
+appsettings.Development.json
+appsettings.*.json
+!appsettings.Public.json
+
+# Environment files
+.env
+.env.*
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
