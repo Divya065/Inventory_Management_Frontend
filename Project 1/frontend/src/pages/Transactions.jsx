@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { transactionService } from '../services/transactionService'
 import CustomerReceiptModal from '../components/CustomerReceiptModal'
+import { useCurrency } from '../contexts/CurrencyContext'
 import './Transactions.css'
 
 const Transactions = () => {
+  const { currency, formatMoney } = useCurrency()
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [clearing, setClearing] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
@@ -32,23 +33,6 @@ const Transactions = () => {
       console.error('Error loading transactions:', err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleClearAll = async () => {
-    const ok = window.confirm('Are you sure you want to delete ALL transactions? This cannot be undone.')
-    if (!ok) return
-
-    try {
-      setClearing(true)
-      setError('')
-      await transactionService.deleteAll()
-      await loadTransactions()
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to delete transactions')
-      console.error('Error deleting all transactions:', err)
-    } finally {
-      setClearing(false)
     }
   }
 
@@ -97,22 +81,20 @@ const Transactions = () => {
   }
 
   return (
-    <div className="transactions-page">
+    <div className="transactions-page page">
+      {receiptTransaction ? (
+        <CustomerReceiptModal
+          transaction={receiptTransaction}
+          onClose={() => setReceiptTransaction(null)}
+        />
+      ) : null}
+
       <div className="transactions-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
           <div>
             <h1>Buy Transactions</h1>
             <p className="transactions-subtitle">Purchase history only. For loans by person, see Loan.</p>
           </div>
-          <button
-            type="button"
-            onClick={handleClearAll}
-            className="btn btn-danger"
-            disabled={clearing}
-            title="Delete all your transactions"
-          >
-            {clearing ? 'Deleting...' : 'Clear All'}
-          </button>
         </div>
       </div>
 
@@ -130,7 +112,7 @@ const Transactions = () => {
                 <th>#</th>
                 <th>Date</th>
                 <th>Customer Name</th>
-                <th>Total (₹)</th>
+                <th>Total ({currency})</th>
                 <th>Payment</th>
                 <th></th>
               </tr>
@@ -146,7 +128,7 @@ const Transactions = () => {
                   <td>{index + 1}</td>
                   <td>{t.createdOn ? new Date(t.createdOn).toLocaleString() : 'N/A'}</td>
                   <td>{t.customerName || 'N/A'}</td>
-                  <td>₹{t.total != null ? Number(t.total).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'}</td>
+                  <td>{formatMoney(t.total)}</td>
                   <td>{t.paymentMethod || '—'}</td>
                   <td>
                     <button
@@ -206,7 +188,7 @@ const Transactions = () => {
                 <div><strong>ID:</strong> {detail.id}</div>
                 <div><strong>Date:</strong> {detail.createdOn ? new Date(detail.createdOn).toLocaleString() : 'N/A'}</div>
                 <div><strong>Customer Name:</strong> {detail.customerName || 'N/A'}</div>
-                <div><strong>Total:</strong> ₹{detail.total != null ? Number(detail.total).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'}</div>
+                <div><strong>Total:</strong> {formatMoney(detail.total)}</div>
                 {detail.paymentMethod && (
                   <div>
                     <strong>Payment:</strong> {detail.paymentMethod}

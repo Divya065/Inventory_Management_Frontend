@@ -39,7 +39,10 @@ namespace Project_1.Repository
 
         public async Task<List<Stock>> GetAllAsync(QuerryObject querry)
         {
-            var stocks= _context.Stocks.Include(c => c.Offers).ThenInclude(a => a.AppUser).AsQueryable();
+            var stocks = _context.Stocks
+                .AsNoTracking()
+                .Include(c => c.Offers)
+                .AsQueryable();
 
             if(!string.IsNullOrWhiteSpace(querry.CompanyName))
             {
@@ -65,7 +68,11 @@ namespace Project_1.Repository
 
         public async Task<Stock?> GetByIdAsync(int id)
         {
-            return await _context.Stocks.Include(c => c.Offers).FirstOrDefaultAsync(x => x.Id == id);
+            return await _context.Stocks
+                .AsNoTracking()
+                .Include(c => c.Offers)
+                .ThenInclude(a => a.AppUser)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<Stock?> UpdateAsync(int id, UpdateStockDto stockDto)

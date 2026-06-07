@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Project_1.Dtos.Transaction;
+using Project_1.Helpers;
 using Project_1.Extentions;
 using Project_1.Interface;
 using Project_1.Models;
@@ -214,6 +215,9 @@ namespace Project_1.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                if (!CustomerNameValidation.TryValidate(dto.CustomerName, out var customerName, out var nameError))
+                    return BadRequest(new { message = nameError });
+
                 var username = User.GetUsername();
                 if (string.IsNullOrEmpty(username))
                     return Unauthorized(new { message = "Could not determine current user." });
@@ -269,7 +273,7 @@ namespace Project_1.Controllers
 
                 var transaction = new Transaction
                 {
-                    CustomerName = dto.CustomerName?.Trim() ?? "",
+                    CustomerName = customerName,
                     Total = dto.Total,
                     Type = transactionType,
                     AppUserId = appUser.Id,

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace Project_1.Dtos.Transaction
 {
@@ -7,6 +8,7 @@ namespace Project_1.Dtos.Transaction
         [Required(ErrorMessage = "Customer name is required")]
         [MinLength(1)]
         [MaxLength(200)]
+        [RegularExpression(@"^[A-Za-z]+(?:\s+[A-Za-z]+)*$", ErrorMessage = "Customer name must contain only letters (A–Z). Spaces between words are allowed.")]
         public string CustomerName { get; set; } = string.Empty;
 
         [Required]

@@ -1,7 +1,9 @@
 import { createPortal } from 'react-dom'
+import { useCurrency } from '../contexts/CurrencyContext'
 import './CustomerReceiptModal.css'
 
 function ReceiptBody({ transaction, storeTitle = 'Sales receipt' }) {
+  const { formatMoney } = useCurrency()
   const { id, customerName, total, itemsSummary, paymentMethod, createdOn } = transaction || {}
   const dateStr = createdOn
     ? new Date(createdOn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
@@ -54,7 +56,7 @@ function ReceiptBody({ transaction, storeTitle = 'Sales receipt' }) {
       <footer className="customer-receipt-bill-total">
         <span className="customer-receipt-bill-total-label">Total</span>
         <span className="customer-receipt-bill-total-value">
-          ₹{total != null ? Number(total).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '—'}
+          {formatMoney(total)}
         </span>
       </footer>
       <p className="customer-receipt-bill-thanks">Thank you for your purchase.</p>

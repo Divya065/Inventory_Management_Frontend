@@ -3,7 +3,8 @@ import api from './api'
 export const stockService = {
   getAll: async (queryParams = {}) => {
     // Avoid cached responses so inventory stays in sync after buy/transaction
-    const params = { ...queryParams, _: Date.now() }
+    // Backend defaults to PageSize=20; use larger default so newly added items show up.
+    const params = { PageSize: 250, ...queryParams, _: Date.now() }
     const response = await api.get('/stock', {
       params,
       headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },

@@ -75,6 +75,8 @@ namespace Project_1.Controllers
             {
                 return BadRequest(ModelState);
             }
+            if (!StockPriceValidation.TryValidate(stockDto.Price, stockDto.MarketCap, out var priceError))
+                return BadRequest(new { message = priceError });
             var stockModel = stockDto.ToCreateFromStockDto();
             await _stockRepo.CreateAsync(stockModel);
             return CreatedAtAction(nameof(GetById), new { id = stockModel.Id }, stockModel.ToStockDto());
@@ -89,6 +91,8 @@ namespace Project_1.Controllers
             {
                 return BadRequest(ModelState);
             }
+            if (!StockPriceValidation.TryValidate(updateDto.Price, updateDto.MarketCap, out var priceError))
+                return BadRequest(new { message = priceError });
             var stockModel = await _stockRepo.UpdateAsync(id,updateDto);
 
             if (stockModel == null)

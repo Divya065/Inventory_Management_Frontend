@@ -1,127 +1,166 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import './AboutUs.css'
 
+const FEATURES = [
+  {
+    id: 'inventory',
+    title: 'Inventory',
+    desc: 'Add and manage products with SKU, name, selling price, MRP, and live stock levels.',
+    accent: 'INV',
+  },
+  {
+    id: 'cart',
+    title: 'Cart & checkout',
+    desc: 'Build a cart, record cash or online sales, and print customer receipts.',
+    accent: 'CRT',
+  },
+  {
+    id: 'transactions',
+    title: 'Transactions',
+    desc: 'Full purchase history with customer names, totals, and payment method.',
+    accent: 'TXN',
+  },
+  {
+    id: 'loans',
+    title: 'Loans',
+    desc: 'Track credit sales per customer with payments and outstanding balances.',
+    accent: 'LN',
+  },
+  {
+    id: 'dashboard',
+    title: 'Dashboard',
+    desc: 'Sales KPIs, charts, low-stock alerts, and multi-currency views in one place.',
+    accent: 'DSH',
+  },
+  {
+    id: 'security',
+    title: 'Secure access',
+    desc: 'Sign in to protect inventory, cart, transactions, and loan data.',
+    accent: 'SEC',
+  },
+]
+
+const STEPS = [
+  {
+    n: '01',
+    title: 'Sign in',
+    desc: 'Create an account or log in. Inventory, cart, transactions, and loans require authentication.',
+  },
+  {
+    n: '02',
+    title: 'Set up inventory',
+    desc: 'Add products with selling price and original (MRP). Search, filter, and update stock anytime.',
+  },
+  {
+    n: '03',
+    title: 'Sell or lend',
+    desc: 'Use the cart for purchases or loans. Dashboard and reports update automatically.',
+  },
+]
+
 const AboutUs = () => {
+  const { isAuthenticated } = useAuth()
+
   return (
-    <div className="about-us-page">
-      <div className="about-container">
-        <section className="hero-section">
-          <h1>About This Project</h1>
-          <p className="subtitle">
-            Inventory Management — a web app to manage items, cart, buy/loan transactions, and offers.
+    <div className="about page">
+      <header className="about-hero">
+        <div className="about-hero-inner">
+          <p className="about-eyebrow">Inventory Management</p>
+          <h1>About this application</h1>
+          <p className="about-lead">
+            A workspace for small and mid-sized businesses to run inventory, checkout, purchase history,
+            and customer loans from one place — with a clear dashboard and professional reporting.
           </p>
-        </section>
-
-        <section className="content-section">
-          <div className="section-card">
-            <h2>What This Project Does</h2>
-            <p>
-              This application lets you manage inventory items (symbol, company name, price in ₹, quantity, market price).
-              You can add items to a cart, record Buy or Loan transactions with a customer name and total, and add offers
-              on items. Buy transactions are listed on the Transactions page; loans are summarized per person on the Loan page.
-            </p>
+          <div className="about-hero-actions">
+            {isAuthenticated ? (
+              <Link to="/" className="btn btn-primary">
+                Open dashboard
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="btn btn-primary">
+                  Sign in
+                </Link>
+                <Link to="/register" className="btn btn-secondary">
+                  Create account
+                </Link>
+              </>
+            )}
+            <Link to="/stocks" className="btn btn-secondary">
+              View inventory
+            </Link>
           </div>
+        </div>
+      </header>
 
-          <div className="section-card">
-            <h2>Features in This Project</h2>
-            <div className="features-grid">
-              <div className="feature-item">
-                <div className="feature-icon">📦</div>
-                <h3>Inventory</h3>
-                <p>View, create, edit, and delete items. Each item has symbol, company name, price (₹), quantity, and market price.</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">🛒</div>
-                <h3>Cart</h3>
-                <p>Add inventory items to your cart. From the cart you can record a Buy or Loan transaction (customer name and total in ₹).</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">📋</div>
-                <h3>Buy Transactions</h3>
-                <p>The Transactions page shows only buy (purchase) history: date, customer name, and total for each transaction.</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">💰</div>
-                <h3>Loan</h3>
-                <p>The Loan page shows total loan per customer. If the same person takes a loan again, the new amount is added to their total.</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">💬</div>
-                <h3>Offers</h3>
-                <p>On each item’s detail page you can add offers (title and content). Offers are listed on the item and count is shown on the inventory list.</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">🔐</div>
-                <h3>Authentication</h3>
-                <p>Register and login with JWT. Inventory, Cart, Transactions, and Loan are available only when logged in.</p>
-              </div>
-            </div>
-          </div>
+      <section className="about-highlights">
+        <article className="about-highlight card">
+          <span className="about-highlight-label">Inventory</span>
+          <strong>Products & stock</strong>
+          <span className="about-highlight-meta">SKU, pricing, quantities</span>
+        </article>
+        <article className="about-highlight card">
+          <span className="about-highlight-label">Sales</span>
+          <strong>Cart & checkout</strong>
+          <span className="about-highlight-meta">Cash or online payment</span>
+        </article>
+        <article className="about-highlight card">
+          <span className="about-highlight-label">Insights</span>
+          <strong>Dashboard</strong>
+          <span className="about-highlight-meta">Charts & alerts</span>
+        </article>
+        <article className="about-highlight card">
+          <span className="about-highlight-label">Credit</span>
+          <strong>Loan tracking</strong>
+          <span className="about-highlight-meta">Per customer</span>
+        </article>
+      </section>
 
-          <div className="section-card">
-            <h2>Tech Used in This Project</h2>
-            <div className="tech-stack">
-              <div className="tech-category">
-                <h3>Frontend</h3>
-                <ul>
-                  <li><strong>React</strong> — UI (pages: Home, About Us, Inventory, Cart, Transactions, Loan, Login, Register)</li>
-                  <li><strong>React Router</strong> — Routing</li>
-                  <li><strong>Axios</strong> — API calls</li>
-                  <li><strong>Vite</strong> — Build and dev server</li>
-                </ul>
-              </div>
-              <div className="tech-category">
-                <h3>Backend</h3>
-                <ul>
-                  <li><strong>ASP.NET Core</strong> — Web API</li>
-                  <li><strong>Entity Framework Core</strong> — Database access</li>
-                  <li><strong>SQL Server</strong> — Database</li>
-                  <li><strong>ASP.NET Core Identity + JWT</strong> — Auth</li>
-                  <li><strong>Swagger</strong> — API docs</li>
-                </ul>
-              </div>
-              <div className="tech-category">
-                <h3>In This Codebase</h3>
-                <ul>
-                  <li><strong>API</strong> — Stock, Portfolio (cart), Offer, Transaction, Account</li>
-                  <li><strong>Models</strong> — Stock, Offer, Portfolio, Transaction, AppUser</li>
-                  <li><strong>Repository + DTOs</strong> — Data layer and request/response shapes</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+      <section className="about-panel card">
+        <div className="about-panel-head">
+          <h2>What you can do</h2>
+          <p className="about-panel-sub">Core modules included in this build</p>
+        </div>
+        <div className="about-features">
+          {FEATURES.map((f) => (
+            <article key={f.id} className="about-feature">
+              <span className="about-feature-icon" aria-hidden>
+                {f.accent}
+              </span>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-          <div className="section-card">
-            <h2>How to Use This Project</h2>
-            <div className="getting-started">
-              <div className="step">
-                <span className="step-number">1</span>
-                <div>
-                  <h3>Register or Login</h3>
-                  <p>Create an account or sign in. You need to be logged in to use Inventory, Cart, Transactions, and Loan.</p>
-                </div>
+      <section className="about-panel card">
+        <div className="about-panel-head">
+          <h2>How it works</h2>
+          <p className="about-panel-sub">Three steps to get started</p>
+        </div>
+        <ol className="about-steps">
+          {STEPS.map((step) => (
+            <li key={step.n} className="about-step">
+              <span className="about-step-num">{step.n}</span>
+              <div>
+                <h3>{step.title}</h3>
+                <p>{step.desc}</p>
               </div>
-              <div className="step">
-                <span className="step-number">2</span>
-                <div>
-                  <h3>Inventory</h3>
-                  <p>Browse items, create or edit them. Open an item to view details and add offers.</p>
-                </div>
-              </div>
-              <div className="step">
-                <span className="step-number">3</span>
-                <div>
-                  <h3>Cart & Transactions</h3>
-                  <p>Add items to the cart. Use Buy or Loan, enter customer name and confirm. Totals appear on Transactions (buy only) and Loan (loan total per person).</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <div className="section-card footer-note-card">
-            <p className="footer-note">This page describes only this project — Inventory Management (React + ASP.NET Core).</p>
-          </div>
-        </section>
-      </div>
+      <footer className="about-footer card">
+        <p>
+          <strong>Inventory Management</strong> — React frontend with ASP.NET Core API and SQL Server.
+        </p>
+        <p className="about-footer-note">
+          Built for demos and day-to-day store operations. Switch currency and theme from the top bar when signed in.
+        </p>
+      </footer>
     </div>
   )
 }

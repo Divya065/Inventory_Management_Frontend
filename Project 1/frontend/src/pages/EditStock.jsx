@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
+import { useCurrency } from '../contexts/CurrencyContext'
+import {
+  getStockPriceValidationError,
+  sanitizeNonNegativeDecimalInput,
+} from '../utils/stockPrice'
 import './StockForm.css'
+
+const formatForInput = (n, digits = 2) => {
+  const v = Number(n)
+  if (!Number.isFinite(v)) return ''
+  const rounded = Math.round(v * 10 ** digits) / 10 ** digits
+  return String(rounded)
+}
 
 const EditStock = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currency, convertFromInr, convertToInr } = useCurrency()
   const [formData, setFormData] = useState({
     Symbol: '',
     CompanyName: '',
@@ -27,9 +40,10 @@ const EditStock = () => {
       setFormData({
         Symbol: stock.symbol || '',
         CompanyName: stock.companyName || '',
-        Price: stock.price?.toString() || '',
+        // Convert INR base -> selected currency for editing
+        Price: formatForInput(convertFromInr(stock.price), 2),
         Quantity: stock.quantity?.toString() || '',
-        MarketCap: stock.marketCap?.toString() || '',
+        MarketCap: formatForInput(convertFromInr(stock.marketCap), 2),
       })
       setError('')
     } catch (err) {
@@ -41,9 +55,14 @@ const EditStock = () => {
   }
 
   const handleChange = (e) => {
+    const { name, value } = e.target
+    const nextValue =
+      name === 'Price' || name === 'MarketCap'
+        ? sanitizeNonNegativeDecimalInput(value)
+        : value
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: nextValue,
     })
     setError('')
   }
@@ -54,12 +73,19 @@ const EditStock = () => {
     setLoading(true)
 
     try {
+      const priceError = getStockPriceValidationError(formData.Price, formData.MarketCap)
+      if (priceError) {
+        setError(priceError)
+        setLoading(false)
+        return
+      }
+
       const stockData = {
         Symbol: formData.Symbol,
         CompanyName: formData.CompanyName,
-        Price: parseFloat(formData.Price),
+        Price: convertToInr(parseFloat(formData.Price)),
         Quantity: parseInt(formData.Quantity, 10),
-        MarketCap: parseInt(formData.MarketCap),
+        MarketCap: Math.round(convertToInr(parseFloat(formData.MarketCap))),
       }
       await stockService.update(id, stockData)
       navigate(`/stocks/${id}`)
@@ -90,20 +116,7 @@ const EditStock = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Symbol">Symbol *</label>
-              <input
-                type="text"
-                id="Symbol"
-                name="Symbol"
-                value={formData.Symbol}
-                onChange={handleChange}
-                required
-                placeholder="e.g., AAPL"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="CompanyName">Company Name *</label>
+              <label htmlFor="CompanyName">Product Name *</label>
               <input
                 type="text"
                 id="CompanyName"
@@ -111,14 +124,27 @@ const EditStock = () => {
                 value={formData.CompanyName}
                 onChange={handleChange}
                 required
-                placeholder="e.g., Apple Inc."
+                placeholder="Product name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="Symbol">SKU / Code</label>
+              <input
+                type="text"
+                id="Symbol"
+                name="Symbol"
+                value={formData.Symbol}
+                onChange={handleChange}
+                required
+                placeholder="e.g., AU002"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Price">Price (₹) *</label>
+              <label htmlFor="Price">Price ({currency}) *</label>
               <input
                 type="number"
                 id="Price"
@@ -148,7 +174,7 @@ const EditStock = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="MarketCap">Market Price *</label>
+            <label htmlFor="MarketCap">Original price (MRP) ({currency}) *</label>
             <input
               type="number"
               id="MarketCap"
@@ -156,8 +182,9 @@ const EditStock = () => {
               value={formData.MarketCap}
               onChange={handleChange}
               required
+              step="0.01"
               min="0"
-              placeholder="e.g., 3000000000000"
+              placeholder="0.00"
             />
           </div>
 

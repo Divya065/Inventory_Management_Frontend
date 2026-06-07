@@ -23,7 +23,7 @@ namespace Project_1.Repository
 
         public async Task<List<Transaction>> GetAllAsync(string? userId = null)
         {
-            var query = _context.Transactions.AsQueryable();
+            var query = _context.Transactions.AsNoTracking().AsQueryable();
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(t => t.AppUserId == userId);
             else
@@ -33,7 +33,7 @@ namespace Project_1.Repository
 
         public async Task<Transaction?> GetByIdAsync(int id)
         {
-            return await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+            return await _context.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
         }
 
         public async Task<int> DeleteAllAsync(string userId)

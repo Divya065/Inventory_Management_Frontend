@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { transactionService } from '../services/transactionService'
+import { useCurrency } from '../contexts/CurrencyContext'
 import './Loans.css'
 
 const Loans = () => {
+  const { currency, formatMoney, convertToInr } = useCurrency()
   const [loans, setLoans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [clearing, setClearing] = useState(false)
   const [detailModal, setDetailModal] = useState(null) // { customerName, transactions: [] }
   const [detailLoading, setDetailLoading] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
@@ -56,23 +57,6 @@ const Loans = () => {
     loadLoans()
   }
 
-  const handleClearAllLoans = async () => {
-    const ok = window.confirm('Are you sure you want to delete ALL loan and payment records? This cannot be undone.')
-    if (!ok) return
-    try {
-      setClearing(true)
-      setError('')
-      await transactionService.deleteAllLoans()
-      setDetailModal(null)
-      await loadLoans()
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to delete loan records')
-      console.error('Error deleting all loans:', err)
-    } finally {
-      setClearing(false)
-    }
-  }
-
   const handleDeleteLoanEntry = async (id) => {
     const ok = window.confirm('Delete this loan/payment entry?')
     if (!ok) return
@@ -118,7 +102,7 @@ const Loans = () => {
     try {
       await transactionService.create({
         customerName: detailModal.customerName,
-        total: amount,
+        total: convertToInr(amount),
         type: 'LoanPayment'
       })
       setPaymentAmount('')
@@ -134,31 +118,20 @@ const Loans = () => {
 
   if (loading) {
     return (
-      <div className="loans-page">
+      <div className="loans-page page">
         <div className="loading">Loading loans...</div>
       </div>
     )
   }
 
   return (
-    <div className="loans-page">
+    <div className="loans-page page">
       <div className="loans-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
           <div>
             <h1>Loans by Person</h1>
             <p className="loans-subtitle">Click a row to see each time they took a loan or made a payment. Total = loans taken − payments.</p>
           </div>
-          {loans.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClearAllLoans}
-              className="btn btn-danger"
-              disabled={clearing}
-              title="Delete all loan and payment records"
-            >
-              {clearing ? 'Deleting...' : 'Clear All'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -169,13 +142,13 @@ const Loans = () => {
           <p>No loans recorded yet.</p>
         </div>
       ) : (
-        <div className="loans-table-wrapper">
-          <table className="loans-table">
+        <div className="transactions-table-wrapper">
+          <table className="transactions-table">
             <thead>
               <tr>
                 <th>#</th>
                 <th>Customer Name</th>
-                <th>Total Loan (₹)</th>
+                <th>Total Loan ({currency})</th>
                 <th>Status</th>
                 <th># of Entries</th>
                 <th>Last Date</th>
@@ -186,12 +159,12 @@ const Loans = () => {
               {loans.map((row, index) => (
                 <tr
                   key={row.customerName || index}
-                  className="loans-row-clickable"
+                  className="clickable-row"
                   onClick={() => openDetail(row.customerName)}
                 >
                   <td>{index + 1}</td>
                   <td>{row.customerName || 'N/A'}</td>
-                  <td className="total-cell">₹{row.totalLoan != null ? Number(row.totalLoan).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'}</td>
+                  <td className="total-cell">{formatMoney(row.totalLoan)}</td>
                   <td>
                     <span className={`loan-status-badge ${(row.status || '').toLowerCase()}`}>
                       {row.status || 'Pending'}
@@ -202,7 +175,7 @@ const Loans = () => {
                   <td>
                     <button
                       type="button"
-                      className="loan-delete-icon"
+                      className="transaction-delete-icon"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDeleteCustomerLoans(row.customerName)
@@ -226,8 +199,8 @@ const Loans = () => {
       )}
 
       {detailModal && (
-        <div className="loan-detail-overlay" onClick={closeDetail}>
-          <div className="loan-detail-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={closeDetail}>
+          <div className="modal-box modal-box--wide" onClick={(e) => e.stopPropagation()}>
             <div className="loan-detail-header">
               <h3>Loan history — {detailModal.customerName}</h3>
               <button type="button" className="loan-detail-close" onClick={closeDetail} aria-label="Close">×</button>
@@ -249,7 +222,7 @@ const Loans = () => {
                       <tr>
                         <th>Date</th>
                         <th>Type</th>
-                        <th>Amount (₹)</th>
+                        <th>Amount ({currency})</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -266,12 +239,12 @@ const Loans = () => {
                               </span>
                             </td>
                             <td className={t.type === 'LoanPayment' ? 'loan-detail-payment' : ''}>
-                              {t.type === 'LoanPayment' ? '−' : ''}₹{t.total != null ? Number(t.total).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : 'N/A'}
+                              {t.type === 'LoanPayment' ? '−' : ''}{formatMoney(t.total)}
                             </td>
                             <td>
                               <button
                                 type="button"
-                                className="loan-delete-icon"
+                                className="transaction-delete-icon"
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleDeleteLoanEntry(t.id)
@@ -300,7 +273,7 @@ const Loans = () => {
                       type="number"
                       step="0.01"
                       min="0.01"
-                      placeholder="Amount (₹)"
+                      placeholder={`Amount (${currency})`}
                       value={paymentAmount}
                       onChange={e => setPaymentAmount(e.target.value)}
                       className="loan-payment-input"

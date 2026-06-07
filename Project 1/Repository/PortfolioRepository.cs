@@ -48,7 +48,9 @@ namespace Project_1.Repository
 
         public async Task<List<Stock>> GetUserPortfolio(AppUser user)
         {
-            return await _context.Portfolios.Where(u => u.AppUserId == user.Id)
+            return await _context.Portfolios
+                .AsNoTracking()
+                .Where(u => u.AppUserId == user.Id)
                 .Select(p => new Stock
                 {
                     Id = p.Stock.Id,

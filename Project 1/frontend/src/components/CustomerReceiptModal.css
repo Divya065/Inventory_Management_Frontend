@@ -23,7 +23,8 @@
 .customer-receipt-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
 }
 
 .customer-receipt-sheet {
@@ -31,15 +32,19 @@
   z-index: 1;
   max-height: 90vh;
   overflow-y: auto;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-lg, 16px);
+  border: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgba(15, 23, 42, 0.12));
   max-width: 440px;
   width: 100%;
 }
 
 .customer-receipt-print-area {
   padding: 1.5rem 1.5rem 0.75rem;
+  /* Receipt always looks like paper — readable in dark mode too */
+  background: #fff;
+  border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
 }
 
 .customer-receipt-actions {
@@ -48,25 +53,12 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   padding: 1rem 1.5rem 1.25rem;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  background: var(--color-surface, #fff);
 }
 
 .customer-receipt-actions .btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border: none;
-}
-
-.customer-receipt-actions .btn-primary {
-  background: #667eea;
-  color: #fff;
-}
-
-.customer-receipt-actions .btn-secondary {
-  background: #e8e8e8;
-  color: #333;
+  min-width: 5.5rem;
 }
 
 /* Receipt paper */
@@ -74,6 +66,7 @@
   font-family: Georgia, 'Times New Roman', Times, serif;
   color: #1a1a1a;
   line-height: 1.45;
+  background: #fff;
 }
 
 .customer-receipt-bill-header {
@@ -168,6 +161,46 @@
   text-align: center;
   font-size: 0.9rem;
   color: #666;
+}
+
+/* Dark mode: modal chrome follows theme; receipt body stays paper-white */
+:root[data-theme='dark'] .customer-receipt-sheet {
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme='dark'] .customer-receipt-print-area,
+:root[data-theme='dark'] .customer-receipt-bill {
+  background: #fff;
+  color: #1a1a1a;
+}
+
+:root[data-theme='dark'] .customer-receipt-bill-title {
+  color: #2c3e50;
+}
+
+:root[data-theme='dark'] .customer-receipt-bill-sub,
+:root[data-theme='dark'] .customer-receipt-bill-meta dt,
+:root[data-theme='dark'] .customer-receipt-bill-items-heading,
+:root[data-theme='dark'] .customer-receipt-bill-thanks {
+  color: #555;
+}
+
+:root[data-theme='dark'] .customer-receipt-bill-meta dd,
+:root[data-theme='dark'] .customer-receipt-bill-total-label,
+:root[data-theme='dark'] .customer-receipt-bill-total-value {
+  color: #1a1a1a;
+}
+
+:root[data-theme='dark'] .customer-receipt-bill-header,
+:root[data-theme='dark'] .customer-receipt-bill-total {
+  border-color: #2c3e50;
+}
+
+:root[data-theme='dark'] .customer-receipt-actions {
+  background: rgba(17, 28, 51, 0.96);
+  border-top-color: rgba(148, 163, 184, 0.2);
 }
 
 @media print {

@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
+import { useCurrency } from '../contexts/CurrencyContext'
+import {
+  getStockPriceValidationError,
+  sanitizeNonNegativeDecimalInput,
+} from '../utils/stockPrice'
 import './StockForm.css'
 
 const CreateStock = () => {
   const navigate = useNavigate()
+  const { currency, convertToInr } = useCurrency()
   const [formData, setFormData] = useState({
     Symbol: '',
     CompanyName: '',
@@ -15,10 +21,30 @@ const CreateStock = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const generateSku = (name) => {
+    const base = String(name || '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9 ]/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((w) => w.slice(0, 3))
+      .join('')
+      .slice(0, 6) || 'PRD'
+    const suffix = String(Date.now()).slice(-4)
+    return `${base}${suffix}`
+  }
+
   const handleChange = (e) => {
+    const { name, value } = e.target
+    const nextValue =
+      name === 'Price' || name === 'MarketCap'
+        ? sanitizeNonNegativeDecimalInput(value)
+        : value
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: nextValue,
     })
     setError('')
   }
@@ -29,11 +55,28 @@ const CreateStock = () => {
     setLoading(true)
 
     try {
+      const name = String(formData.CompanyName || '').trim()
+      if (!name) {
+        setError('Product name is required.')
+        setLoading(false)
+        return
+      }
+
+      const priceError = getStockPriceValidationError(formData.Price, formData.MarketCap)
+      if (priceError) {
+        setError(priceError)
+        setLoading(false)
+        return
+      }
+
+      const symbol = String(formData.Symbol || '').trim() || generateSku(name)
       const stockData = {
         ...formData,
-        Price: parseFloat(formData.Price),
+        Symbol: symbol,
+        // User enters selected currency; backend stores INR base
+        Price: convertToInr(parseFloat(formData.Price)),
         Quantity: parseInt(formData.Quantity, 10),
-        MarketCap: parseInt(formData.MarketCap),
+        MarketCap: Math.round(convertToInr(parseFloat(formData.MarketCap))),
       }
       const created = await stockService.create(stockData)
       // Navigate to the stocks list instead of details to avoid loading errors
@@ -61,20 +104,7 @@ const CreateStock = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Symbol">Symbol *</label>
-              <input
-                type="text"
-                id="Symbol"
-                name="Symbol"
-                value={formData.Symbol}
-                onChange={handleChange}
-                required
-                placeholder="e.g., AAPL"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="CompanyName">Company Name *</label>
+              <label htmlFor="CompanyName">Product Name *</label>
               <input
                 type="text"
                 id="CompanyName"
@@ -82,14 +112,26 @@ const CreateStock = () => {
                 value={formData.CompanyName}
                 onChange={handleChange}
                 required
-                placeholder="e.g., Apple Inc."
+                placeholder="e.g., Tim Tam Original Biscuits"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="Symbol">SKU / Code (optional)</label>
+              <input
+                type="text"
+                id="Symbol"
+                name="Symbol"
+                value={formData.Symbol}
+                onChange={handleChange}
+                placeholder="Auto-generated if empty"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="Price">Price (₹) *</label>
+              <label htmlFor="Price">Price ({currency}) *</label>
               <input
                 type="number"
                 id="Price"
@@ -119,7 +161,7 @@ const CreateStock = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="MarketCap">Market Price *</label>
+            <label htmlFor="MarketCap">Original price (MRP) ({currency}) *</label>
             <input
               type="number"
               id="MarketCap"
@@ -127,8 +169,9 @@ const CreateStock = () => {
               value={formData.MarketCap}
               onChange={handleChange}
               required
+              step="0.01"
               min="0"
-              placeholder="e.g., 3000000000000"
+              placeholder="0.00"
             />
           </div>
 

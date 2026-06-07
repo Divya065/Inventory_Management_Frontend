@@ -1,14 +1,53 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { stockService } from '../services/stockService'
 import { tokenHelper } from '../utils/tokenHelper'
+import { useCurrency } from '../contexts/CurrencyContext'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { displayPrice } from '../utils/stockPrice'
 import './Stocks.css'
 
+const getAvatarText = (symbol, name) => {
+  const s = String(symbol || '').trim()
+  if (s) return s.slice(0, 2).toUpperCase()
+  const n = String(name || '').trim()
+  if (!n) return 'PR'
+  const words = n.split(/\s+/).filter(Boolean)
+  const initials = (words[0]?.[0] || '') + (words[1]?.[0] || '')
+  return initials.trim().toUpperCase().slice(0, 2) || n.slice(0, 2).toUpperCase()
+}
+
+const getOriginalPrice = (price, marketCap) => {
+  const p = displayPrice(price)
+  const m = displayPrice(marketCap)
+  if (!Number.isFinite(p) || p <= 0) return Number.isFinite(m) ? m : 0
+  // If seed/backing data still has "market cap" style numbers, normalize to a reasonable MRP.
+  if (!Number.isFinite(m) || m <= 0 || m > 100000) return p * 1.25
+  // If market value is suspiciously higher than unit price, treat it as cap and normalize.
+  if (m > p * 50) return p * 1.25
+  return m
+}
+
 const Stocks = () => {
+  const { formatMoney, formatCompactMoney } = useCurrency()
   const [stocks, setStocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(null) // { id, name }
+  const [query, setQuery] = useState('')
+  const [view, setView] = useState('compact')
   const location = useLocation()
+
+  const filteredStocks = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const list = Array.isArray(stocks) ? stocks : []
+    if (!q) return list
+    return list.filter((s) => {
+      const a = String(s.symbol || '').toLowerCase()
+      const b = String(s.companyName || '').toLowerCase()
+      return a.includes(q) || b.includes(q)
+    })
+  }, [stocks, query])
 
   const loadStocks = useCallback(async () => {
     try {
@@ -23,16 +62,6 @@ const Stocks = () => {
       }
       
       const token = tokenHelper.getToken()
-      const decoded = tokenHelper.decodeToken(token)
-      
-      if (decoded) {
-        console.log('Token info:', {
-          email: decoded.email,
-          username: decoded.given_name,
-          expires: new Date(decoded.exp * 1000).toLocaleString(),
-          isExpired: tokenHelper.isTokenExpired(token)
-        })
-      }
       
       if (tokenHelper.isTokenExpired(token)) {
         setError('Your session has expired. Please login again.')
@@ -41,23 +70,16 @@ const Stocks = () => {
         return
       }
       
-      console.log('Fetching stocks from API...')
       const data = await stockService.getAll()
-      console.log('Stocks received:', data)
-      console.log('Number of stocks:', data?.length || 0)
       
       if (Array.isArray(data)) {
         setStocks(data)
         setError('') // Clear any previous errors on successful load
       } else {
-        console.warn('Unexpected data format:', data)
         setStocks([])
         setError('') // Clear error even if data format is unexpected
       }
     } catch (err) {
-      console.error('Error loading stocks:', err)
-      console.error('Full error object:', err)
-      
       // Extract specific error message
       let errorMessage = 'Failed to load stocks. Please try again.'
       
@@ -65,12 +87,6 @@ const Stocks = () => {
         const status = err.response.status
         if (status === 401) {
           errorMessage = 'You are not authenticated. Please login again. (Error 401: Unauthorized)'
-          console.error('401 Error Details:', {
-            responseData: err.response.data,
-            headers: err.response.headers,
-            tokenExists: tokenHelper.hasToken(),
-            tokenValue: token ? token.substring(0, 20) + '...' : 'null'
-          })
           // Clear invalid token
           tokenHelper.clearToken()
         } else if (status === 403) {
@@ -102,15 +118,6 @@ const Stocks = () => {
     if (location.pathname === '/stocks') loadStocks()
   }, [location.pathname, loadStocks])
 
-  // Refetch when user returns to this tab so inventory stays in sync after purchases elsewhere
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') loadStocks()
-    }
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
-  }, [loadStocks])
-
   // Refetch when a Buy completed (e.g. user had Inventory open and did Buy in another tab, or will navigate here next)
   useEffect(() => {
     const onRefresh = () => loadStocks()
@@ -118,27 +125,23 @@ const Stocks = () => {
     return () => window.removeEventListener('inventory-should-refresh', onRefresh)
   }, [loadStocks])
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        setError('') // Clear previous errors
-        await stockService.delete(id)
-        await loadStocks() // Reload stocks after successful deletion
-      } catch (err) {
-        const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete stock'
-        alert(`Error: ${errorMsg}`)
-        console.error('Error deleting stock:', err)
-      }
+  const requestDelete = (id, name) => {
+    setConfirmDelete({ id, name: name || 'this item' })
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete?.id) return
+    try {
+      setError('')
+      await stockService.delete(confirmDelete.id)
+      setConfirmDelete(null)
+      await loadStocks()
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete item'
+      setConfirmDelete(null)
+      alert(`Error: ${errorMsg}`)
     }
   }
-  
-  // Debug: Log the stocks data structure
-  useEffect(() => {
-    if (stocks.length > 0) {
-      console.log('Sample stock structure:', stocks[0])
-      console.log('Available properties:', Object.keys(stocks[0]))
-    }
-  }, [stocks])
 
   if (loading) {
     return <div className="loading">Loading inventory...</div>
@@ -166,27 +169,45 @@ const Stocks = () => {
               </button>
             )}
           </div>
-          <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#f8f9fa', borderRadius: '5px' }}>
-            <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#7f8c8d', fontWeight: '600' }}>
-              Debugging Information:
-            </p>
-            <ul style={{ margin: '0', paddingLeft: '1.5rem', fontSize: '0.85rem', color: '#7f8c8d' }}>
-              <li>Check the browser console (F12) for detailed error logs</li>
-              <li>Verify your token is valid in sessionStorage (F12 → Application → Session Storage)</li>
-              <li>Check the backend terminal for server-side errors</li>
-              <li>Make sure the backend is running on http://localhost:5032</li>
-            </ul>
-          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="stocks-page">
+    <div className="stocks-page page">
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Delete item?"
+        message={confirmDelete ? `Are you sure you want to delete "${confirmDelete.name}"? This cannot be undone.` : ''}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
+
       <div className="stocks-header">
         <h1>Inventory</h1>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div className="stocks-tools">
+            <div className="stocks-search">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search products…"
+                aria-label="Search products"
+              />
+            </div>
+            <div className="stocks-view-toggle" role="group" aria-label="Inventory view">
+              <button type="button" className={view === 'compact' ? 'active' : ''} onClick={() => setView('compact')}>
+                Compact
+              </button>
+              <button type="button" className={view === 'showcase' ? 'active' : ''} onClick={() => setView('showcase')}>
+                Showcase
+              </button>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => loadStocks()}
@@ -211,61 +232,90 @@ const Stocks = () => {
         </div>
       ) : (
         <div className="stocks-grid">
-          {stocks.map((stock) => (
-            <div key={stock.id} className="stock-card">
-              <div className="stock-card-header">
-                <h3>{stock.symbol}</h3>
-                <span className="stock-id">#{stock.id}</span>
-              </div>
-              <div className="stock-card-body">
-                <p className="stock-company">{stock.companyName || 'N/A'}</p>
-                <div className="stock-details">
-                  <div className="stock-detail-item">
-                    <span className="label">Price:</span>
-                    <span className="value">
-                      {stock.price != null ? `₹${Number(stock.price).toLocaleString()}` : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="stock-detail-item">
-                    <span className="label">Quantity:</span>
-                    <span className="value">
-                      {stock.quantity != null
-                        ? (Number(stock.quantity) === 0 ? 'Out of stock' : stock.quantity)
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="stock-detail-item">
-                    <span className="label">Market Price:</span>
-                    <span className="value">
-                      {stock.marketCap != null 
-                        ? `₹${stock.marketCap.toLocaleString()}` 
-                        : 'N/A'}
-                    </span>
-                  </div>
-                  {stock.offers && stock.offers.length > 0 && (
-                    <div className="stock-detail-item">
-                      <span className="label">Offers:</span>
-                      <span className="value">{stock.offers.length}</span>
-                    </div>
-                  )}
+          {filteredStocks.map((stock) => {
+            const quantity = Number(stock.quantity) || 0
+            const stockStatus = quantity === 0 ? 'Out of stock' : quantity <= 5 ? 'Low stock' : 'Available'
+            const statusClass = quantity === 0 ? 'danger' : quantity <= 5 ? 'warning' : 'success'
+            const offerCount = stock.offers?.length || 0
+            const stockLevel = Math.min(100, Math.max(0, quantity))
+
+            return (
+              <article
+                key={stock.id}
+                className={`stock-card stock-card--${statusClass} ${view === 'compact' ? 'stock-card--compact' : 'stock-card--showcase'}`}
+              >
+                <div className="stock-card-glow" aria-hidden />
+                <div className="stock-card-topline">
+                  <span className="stock-id">#{stock.id}</span>
                 </div>
-              </div>
-              <div className="stock-card-actions">
-                <Link to={`/stocks/${stock.id}`} className="btn btn-secondary btn-sm">
-                  View Details
-                </Link>
-                <Link to={`/stocks/${stock.id}/edit`} className="btn btn-secondary btn-sm">
-                  Edit
-                </Link>
-                <button
-                  onClick={() => handleDelete(stock.id)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+
+                <div className="stock-hero">
+                  <span className="stock-symbol-avatar">{getAvatarText(stock.symbol, stock.companyName)}</span>
+                  <div className="stock-hero-copy">
+                    <strong>{stock.companyName || 'Unnamed item'}</strong>
+                  </div>
+                </div>
+
+                <div className="stock-card-header">
+                  <div className="stock-identity">
+                    <h3>{stock.symbol || '—'}</h3>
+                  </div>
+                  <span className={`stock-status stock-status--${statusClass}`}>{stockStatus}</span>
+                </div>
+
+                <div className="stock-price-panel">
+                  <div>
+                    <span className="stock-price-label">Selling price</span>
+                    <strong>{formatMoney(displayPrice(stock.price))}</strong>
+                  </div>
+                  <div className="stock-market-chip">
+                    <span>Original price (MRP)</span>
+                    <strong>{formatMoney(getOriginalPrice(stock.price, stock.marketCap))}</strong>
+                  </div>
+                </div>
+
+                <div className="stock-health">
+                  <div className="stock-health-label">
+                    <span>Stock health</span>
+                    <strong>{quantity} units</strong>
+                  </div>
+                  <div className="stock-health-track" aria-hidden>
+                    <span style={{ width: `${stockLevel}%` }} />
+                  </div>
+                </div>
+
+                <div className="stock-metrics">
+                  <div className="stock-metric">
+                    <span>Qty</span>
+                    <strong>{quantity}</strong>
+                  </div>
+                  <div className="stock-metric">
+                    <span>Item</span>
+                    <strong>{stock.symbol || '—'}</strong>
+                  </div>
+                  <div className="stock-metric">
+                    <span>Offers</span>
+                    <strong>{offerCount}</strong>
+                  </div>
+                </div>
+
+                <div className="stock-card-actions">
+                  <Link to={`/stocks/${stock.id}`} className="stock-action stock-action--primary">
+                    View details
+                  </Link>
+                  <Link to={`/stocks/${stock.id}/edit`} className="stock-action">
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => requestDelete(stock.id, stock.companyName || stock.symbol)}
+                    className="stock-action stock-action--danger"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            )
+          })}
         </div>
       )}
     </div>

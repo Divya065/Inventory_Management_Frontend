@@ -3,12 +3,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
 import { offerService } from '../services/offerService'
 import { useAuth } from '../contexts/AuthContext'
+import { useCurrency } from '../contexts/CurrencyContext'
+import { displayPrice } from '../utils/stockPrice'
 import './StockDetails.css'
 
 const StockDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
+  const { currency, formatMoney } = useCurrency()
   const [stock, setStock] = useState(null)
   const [offers, setOffers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -173,16 +176,25 @@ const StockDetails = () => {
               <span className="info-value">#{stock.id}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Price (₹)</span>
-              <span className="info-value">₹{stock.price != null ? Number(stock.price).toLocaleString() : 'N/A'}</span>
+              <span className="info-label">Price ({currency})</span>
+              <span className="info-value">{formatMoney(displayPrice(stock.price))}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Quantity</span>
               <span className="info-value">{stock.quantity != null ? stock.quantity : 'N/A'}</span>
             </div>
             <div className="info-item">
-              <span className="info-label">Market Price</span>
-              <span className="info-value">₹{stock.marketCap != null ? Number(stock.marketCap).toLocaleString() : 'N/A'}</span>
+              <span className="info-label">Original price (MRP) ({currency})</span>
+              <span className="info-value">
+                {(() => {
+                  const p = displayPrice(stock.price)
+                  const m = displayPrice(stock.marketCap)
+                  const original = !Number.isFinite(m) || m <= 0 || m > 100000 || (Number.isFinite(p) && p > 0 && m > p * 50)
+                    ? (Number.isFinite(p) && p > 0 ? p * 1.25 : m)
+                    : m
+                  return formatMoney(original)
+                })()}
+              </span>
             </div>
           </div>
         </div>

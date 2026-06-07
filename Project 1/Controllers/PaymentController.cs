@@ -7,6 +7,7 @@ using Project_1.Configuration;
 using Project_1.Dtos.Payment;
 using Project_1.Dtos.Transaction;
 using Project_1.Extentions;
+using Project_1.Helpers;
 using Project_1.Interface;
 using Project_1.Models;
 using Project_1.Service;
@@ -99,6 +100,8 @@ namespace Project_1.Controllers
                 return BadRequest(new { message = "Request body is required (CustomerName)." });
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+            if (!CustomerNameValidation.TryValidate(dto.CustomerName, out var customerName, out var nameError))
+                return BadRequest(new { message = nameError });
             if (!_razorpayService.IsConfigured)
                 return BadRequest(new { message = "Razorpay is not configured. Set Razorpay:KeyId and Razorpay:KeySecret in appsettings or environment." });
 
@@ -140,7 +143,7 @@ namespace Project_1.Controllers
             var receipt = Guid.NewGuid().ToString("N");
             var notes = new Dictionary<string, string>
             {
-                { "customer_name", dto.CustomerName.Trim() }
+                { "customer_name", customerName }
             };
 
             string providerOrderId;
@@ -167,7 +170,7 @@ namespace Project_1.Controllers
                 Amount = total,
                 Currency = "INR",
                 Status = "Created",
-                CustomerName = dto.CustomerName.Trim(),
+                CustomerName = customerName,
                 ItemsSummary = itemsSummary,
                 OrderItemsJson = JsonConvert.SerializeObject(orderItems),
                 AppUserId = appUser.Id

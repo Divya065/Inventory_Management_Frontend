@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { CurrencyProvider } from './contexts/CurrencyContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -17,72 +19,83 @@ import ProtectedRoute from './components/ProtectedRoute'
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route 
-              path="/stocks" 
-              element={
-                <ProtectedRoute>
-                  <Stocks />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/stocks/:id" 
-              element={
-                <ProtectedRoute>
-                  <StockDetails />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/stocks/create" 
-              element={
-                <ProtectedRoute>
-                  <CreateStock />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/stocks/:id/edit" 
-              element={
-                <ProtectedRoute>
-                  <EditStock />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/cart" 
-              element={
-                <ProtectedRoute>
-                  <Portfolio />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/transactions" 
-              element={
-                <ProtectedRoute>
-                  <Transactions />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/loans" 
-              element={
-                <ProtectedRoute>
-                  <Loans />
-                </ProtectedRoute>
-              } 
-            />
-          </Route>
-        </Routes>
-      </Router>
+      <ThemeProvider>
+        <CurrencyProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route element={<Layout />}>
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/about" element={<AboutUs />} />
+                <Route
+                  path="/stocks"
+                  element={
+                    <ProtectedRoute>
+                      <Stocks />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/stocks/:id"
+                  element={
+                    <ProtectedRoute>
+                      <StockDetails />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/stocks/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateStock />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/stocks/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <EditStock />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cart"
+                  element={
+                    <ProtectedRoute>
+                      <Portfolio />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/transactions"
+                  element={
+                    <ProtectedRoute>
+                      <Transactions />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/loans"
+                  element={
+                    <ProtectedRoute>
+                      <Loans />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+            </Routes>
+          </Router>
+        </CurrencyProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

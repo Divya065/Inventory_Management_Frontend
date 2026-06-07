@@ -27,11 +27,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const data = await authService.login(username, password)
-      
-      // Log the full response to see what we're getting
-      console.log('🔍 Login response data:', data)
-      console.log('🔍 Response keys:', Object.keys(data || {}))
-      
+
       // Handle both PascalCase (Token) and camelCase (token) from backend
       const token = data?.Token || data?.token
       const userName = data?.UserName || data?.userName
@@ -39,8 +35,6 @@ export const AuthProvider = ({ children }) => {
       
       // Verify token exists in response
       if (!data || !token) {
-        console.error('❌ No token received from server!')
-        console.error('Full response:', JSON.stringify(data, null, 2))
         return {
           success: false,
           error: 'Login successful but no token received. Please check backend response.',
@@ -61,28 +55,15 @@ export const AuthProvider = ({ children }) => {
       // Verify token was stored
       const storedToken = sessionStorage.getItem('token')
       if (!storedToken) {
-        console.error('❌ Failed to store token in sessionStorage!')
         return {
           success: false,
           error: 'Failed to save authentication token. Please try again.',
         }
       }
       
-      console.log('✅ Login successful! Token stored:', {
-        tokenLength: storedToken.length,
-        tokenPreview: storedToken.substring(0, 30) + '...',
-        username: userName,
-        email: email
-      })
-      
       setUser(userData)
       return { success: true }
     } catch (error) {
-      // Log full error for debugging
-      console.error('❌ Login error:', error)
-      console.error('Error response:', error.response)
-      console.error('Error data:', error.response?.data)
-      
       // Extract error message from backend response
       let errorMessage = 'Login failed. Please check your credentials.'
       
@@ -90,10 +71,7 @@ export const AuthProvider = ({ children }) => {
         // Backend returned an error response
         const status = error.response.status
         const errorData = error.response.data
-        
-        console.error('Error status:', status)
-        console.error('Error data:', errorData)
-        
+
         if (status === 401) {
           // Unauthorized - invalid credentials
           if (typeof errorData === 'string') {
@@ -120,9 +98,6 @@ export const AuthProvider = ({ children }) => {
       } else if (error.message) {
         errorMessage = error.message
       }
-      
-      console.error('Final error message:', errorMessage)
-      
       return {
         success: false,
         error: errorMessage,
@@ -133,11 +108,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password) => {
     try {
       const data = await authService.register(username, email, password)
-      
-      // Log the full response to see what we're getting
-      console.log('🔍 Register response data:', data)
-      console.log('🔍 Response keys:', Object.keys(data || {}))
-      
+
       // Handle both PascalCase (Token) and camelCase (token) from backend
       const token = data?.Token || data?.token
       const userName = data?.UserName || data?.userName
@@ -145,8 +116,6 @@ export const AuthProvider = ({ children }) => {
       
       // Verify token exists in response
       if (!data || !token) {
-        console.error('❌ No token received from server!')
-        console.error('Full response:', JSON.stringify(data, null, 2))
         return {
           success: false,
           error: 'Registration successful but no token received. Please check backend response.',
@@ -167,19 +136,11 @@ export const AuthProvider = ({ children }) => {
       // Verify token was stored
       const storedToken = sessionStorage.getItem('token')
       if (!storedToken) {
-        console.error('❌ Failed to store token in sessionStorage!')
         return {
           success: false,
           error: 'Failed to save authentication token. Please try again.',
         }
       }
-      
-      console.log('✅ Registration successful! Token stored:', {
-        tokenLength: storedToken.length,
-        tokenPreview: storedToken.substring(0, 30) + '...',
-        username: userName,
-        email: emailData
-      })
       
       setUser(userData)
       return { success: true }

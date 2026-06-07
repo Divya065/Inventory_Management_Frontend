@@ -5,9 +5,17 @@ import { stockService } from '../services/stockService'
 import { transactionService } from '../services/transactionService'
 import { paymentService } from '../services/paymentService'
 import CustomerReceiptModal from '../components/CustomerReceiptModal'
+import { useCurrency } from '../contexts/CurrencyContext'
+import {
+  getCustomerNameError,
+  normalizeCustomerName,
+  sanitizeCustomerNameInput,
+} from '../utils/customerName'
+import { displayPrice } from '../utils/stockPrice'
 import './Portfolio.css'
 
 const Portfolio = () => {
+  const { currency, formatMoney } = useCurrency()
   // portfolio = your current cart items (loaded from backend)
   const [portfolio, setPortfolio] = useState([])
   const [loading, setLoading] = useState(true)
@@ -22,6 +30,7 @@ const Portfolio = () => {
   const [showTransactionModal, setShowTransactionModal] = useState(false)
   const [transactionType, setTransactionType] = useState('Buy')
   const [customerName, setCustomerName] = useState('')
+  const [customerNameError, setCustomerNameError] = useState('')
   const [transactionSubmitting, setTransactionSubmitting] = useState(false)
   const [showBuyPaymentModal, setShowBuyPaymentModal] = useState(false)
 
@@ -149,7 +158,7 @@ const Portfolio = () => {
 
   // Total = sum of (price × quantity) for each cart item
   const cartTotal = portfolio.reduce((sum, item) => {
-    const price = Number(item.price) || 0
+    const price = displayPrice(item.price)
     const qty = Number(item.quantity) || 1
     return sum + price * qty
   }, 0)
@@ -160,12 +169,14 @@ const Portfolio = () => {
     }
     setTransactionType(type)
     setCustomerName('')
+    setCustomerNameError('')
     setShowTransactionModal(true)
   }
 
   const closeTransactionModal = () => {
     setShowTransactionModal(false)
     setCustomerName('')
+    setCustomerNameError('')
     setBuyPaymentMethod(null)
     setRazorpayError('')
   }
@@ -215,11 +226,13 @@ const Portfolio = () => {
 
   const handleTransactionSubmit = async (e) => {
     e.preventDefault()
-    const name = customerName.trim()
-    if (!name) {
-      alert('Please enter customer name')
+    const name = normalizeCustomerName(customerName)
+    const nameError = getCustomerNameError(customerName)
+    if (nameError) {
+      setCustomerNameError(nameError)
       return
     }
+    setCustomerNameError('')
     if (cartTotal <= 0) {
       alert('Cart total must be greater than 0')
       return
@@ -370,13 +383,16 @@ const Portfolio = () => {
   }
 
   return (
-    <div className="portfolio-page">
+    <div className="portfolio-page page">
       {receiptTransaction ? (
         <CustomerReceiptModal transaction={receiptTransaction} onClose={() => setReceiptTransaction(null)} />
       ) : null}
 
       <div className="portfolio-header">
-        <h1>My Cart</h1>
+        <div>
+          <h1>My Cart</h1>
+          <p className="page-subtitle">Add items, checkout with cash or Razorpay, or create a loan.</p>
+        </div>
       </div>
 
       <div className="add-stock-section">
@@ -411,7 +427,7 @@ const Portfolio = () => {
                   >
                     <div className="search-result-symbol">{stock.symbol}</div>
                     <div className="search-result-company">{stock.companyName || 'N/A'}</div>
-                    <div className="search-result-industry">₹{stock.price != null ? Number(stock.price).toLocaleString() : 'N/A'} · Qty: {stock.quantity ?? 'N/A'}</div>
+                    <div className="search-result-industry">{formatMoney(displayPrice(stock.price))} · Qty: {stock.quantity ?? 'N/A'}</div>
                   </div>
                 ))}
               </div>
@@ -476,7 +492,7 @@ const Portfolio = () => {
         <div className="modal-overlay" onClick={closeBuyPaymentModal}>
           <div className="modal-box modal-box--wide" onClick={(e) => e.stopPropagation()}>
             <h3>How will the customer pay?</h3>
-            <p className="modal-total">Total: ₹{cartTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            <p className="modal-total">Total: {formatMoney(cartTotal)}</p>
             <p className="modal-hint">
               Cash records the sale immediately. Online opens Razorpay’s payment window (UPI, card, etc.)—not a QR on this page. Configure{' '}
               <code>Razorpay:KeyId</code> and <code>Razorpay:KeySecret</code> in <code>appsettings.json</code> and restart the API.
@@ -505,7 +521,7 @@ const Portfolio = () => {
             {transactionType === 'Buy' && buyPaymentMethod && (
               <p className="modal-hint">Payment: {buyPaymentMethod === 'Razorpay' ? 'Online (Razorpay)' : buyPaymentMethod}</p>
             )}
-            <p className="modal-total">Total: ₹{cartTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            <p className="modal-total">Total: {formatMoney(cartTotal)}</p>
             {transactionType === 'Buy' && buyPaymentMethod === 'Razorpay' && (
               <p className="modal-hint">
                 After you click <strong>Pay Online</strong>, Razorpay opens in a popup. UPI QR (if shown) appears inside Razorpay, not here.
@@ -521,11 +537,26 @@ const Portfolio = () => {
                   id="customer-name"
                   type="text"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
+                  onChange={(e) => {
+                    setCustomerName(sanitizeCustomerNameInput(e.target.value))
+                    if (customerNameError) setCustomerNameError('')
+                  }}
+                  placeholder="Letters only, e.g. John Smith"
                   required
                   autoFocus
+                  autoComplete="name"
+                  inputMode="text"
+                  aria-invalid={customerNameError ? 'true' : 'false'}
                 />
+                {customerNameError ? (
+                  <p className="modal-hint" style={{ color: 'var(--color-danger)', marginTop: '0.35rem' }}>
+                    {customerNameError}
+                  </p>
+                ) : (
+                  <p className="modal-hint" style={{ marginTop: '0.35rem' }}>
+                    Only letters (A–Z) and spaces between words are allowed.
+                  </p>
+                )}
               </div>
               <div className="modal-actions">
                 <button type="button" onClick={closeTransactionModal} className="btn btn-secondary">
@@ -568,15 +599,24 @@ const Portfolio = () => {
                 <div className="portfolio-details">
                   <div className="portfolio-detail-item">
                     <span className="label">Price:</span>
-                    <span className="value">₹{stock.price != null ? Number(stock.price).toLocaleString() : 'N/A'}</span>
+                    <span className="value">{formatMoney(displayPrice(stock.price))}</span>
                   </div>
                   <div className="portfolio-detail-item">
                     <span className="label">Quantity in cart:</span>
                     <span className="value">{stock.quantity != null ? stock.quantity : 1}</span>
                   </div>
                   <div className="portfolio-detail-item">
-                    <span className="label">Market Price:</span>
-                    <span className="value">₹{stock.marketCap != null ? Number(stock.marketCap).toLocaleString() : 'N/A'}</span>
+                    <span className="label">Original price (MRP) ({currency}):</span>
+                    <span className="value">
+                      {(() => {
+                        const p = displayPrice(stock.price)
+                        const m = displayPrice(stock.marketCap)
+                        const original = !Number.isFinite(m) || m <= 0 || m > 100000 || (Number.isFinite(p) && p > 0 && m > p * 50)
+                          ? (Number.isFinite(p) && p > 0 ? p * 1.25 : m)
+                          : m
+                        return formatMoney(original)
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>

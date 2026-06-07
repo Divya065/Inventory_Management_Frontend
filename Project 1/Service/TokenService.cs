@@ -15,10 +15,11 @@ namespace Project_1.Service
         {
             _config = config;
             var signingKey = _config["Jwt:SigningKey"];
-            
-            if (string.IsNullOrEmpty(signingKey))
+
+            if (string.IsNullOrWhiteSpace(signingKey) || signingKey.StartsWith("__SET_IN_", StringComparison.Ordinal))
             {
-                throw new InvalidOperationException("JWT SigningKey is not configured in appsettings.json");
+                throw new InvalidOperationException(
+                    "JWT SigningKey is not configured. Create appsettings.json (copy from appsettings.Public.json) or set Jwt__SigningKey / dotnet user-secrets.");
             }
             
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));

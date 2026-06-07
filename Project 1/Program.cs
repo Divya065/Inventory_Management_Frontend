@@ -87,7 +87,7 @@ builder.Services.AddAuthentication(options => {
         ValidAudience = builder.Configuration["Jwt:Audience"],
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
-        System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SigningKey"] ?? throw new InvalidOperationException("JWT SigningKey is not configured"))
+        System.Text.Encoding.UTF8.GetBytes(GetJwtSigningKey(builder.Configuration))
         )
     };
 });
@@ -226,3 +226,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string GetJwtSigningKey(IConfiguration config)
+{
+    var key = config["Jwt:SigningKey"];
+    if (string.IsNullOrWhiteSpace(key) || key.StartsWith("__SET_IN_", StringComparison.Ordinal))
+        throw new InvalidOperationException(
+            "JWT SigningKey is not configured. Create appsettings.json (copy from appsettings.Public.json) or set Jwt__SigningKey.");
+    return key;
+}

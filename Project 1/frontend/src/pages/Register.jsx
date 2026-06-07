@@ -30,23 +30,13 @@ const Register = () => {
     const result = await register(formData.username, formData.email, formData.password)
 
     if (result.success) {
-      // Verify token is stored before navigating
       const token = sessionStorage.getItem('token')
       const user = sessionStorage.getItem('user')
       
       if (token && user) {
-        console.log('✅ Registration successful!')
-        console.log('Token stored:', token.substring(0, 30) + '...')
-        console.log('User stored:', JSON.parse(user))
-        console.log('Navigating to stocks...')
-        
-        // Small delay to ensure state is updated
-        setTimeout(() => {
-          navigate('/stocks')
-        }, 100)
+        navigate('/')
       } else {
         setError('Registration successful but token not saved. Please try again.')
-        console.error('❌ Token missing after registration!', { token: !!token, user: !!user })
       }
     } else {
       setError(result.error || 'Registration failed. Please try again.')
@@ -57,62 +47,84 @@ const Register = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h2 className="auth-title">Register</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              placeholder="Choose a username"
-            />
+      <div className="auth-shell">
+        <aside className="auth-showcase">
+          <div className="auth-brand">
+            <span className="auth-brand-mark">IM</span>
+            <span>Inventory Management</span>
+          </div>
+          <h1>Create your business workspace in seconds.</h1>
+          <p>
+            Register to manage products, checkout carts, record payments, and track customer loans.
+          </p>
+          <div className="auth-showcase-card">
+            <span>Included modules</span>
+            <strong>Inventory · Razorpay · Receipts · Loans</strong>
+          </div>
+        </aside>
+
+        <div className="auth-card">
+          <div className="auth-heading">
+            <span className="auth-kicker">New workspace</span>
+            <h2 className="auth-title">Create account</h2>
+            <p>Start managing your inventory professionally.</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              placeholder="Enter your email"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="auth-form">
+            {error && <div className="error-message">{error}</div>}
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password (min 12 characters)"
-              minLength={12}
-            />
-            <small className="form-hint">
-              Password must be at least 12 characters with uppercase, lowercase, digit, and special character
-            </small>
-          </div>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Choose a username"
+              />
+            </div>
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Enter your email"
+              />
+            </div>
 
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Login here</Link>
-        </p>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password (min 12 characters)"
+                minLength={12}
+              />
+              <small className="form-hint">
+                Use uppercase, lowercase, digit, and special character.
+              </small>
+            </div>
+
+            <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create account'}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
       </div>
     </div>
   )

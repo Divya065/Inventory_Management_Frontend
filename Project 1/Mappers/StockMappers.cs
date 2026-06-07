@@ -1,4 +1,5 @@
 using Project_1.Dtos.Stock;
+using Project_1.Helpers;
 using Project_1.Models;
 
 namespace Project_1.Mappers
@@ -12,9 +13,9 @@ namespace Project_1.Mappers
                 Id = stockModel.Id,
                 Symbol = stockModel.Symbol,
                 CompanyName = stockModel.CompanyName,
-                Price = stockModel.Price,
+                Price = StockPriceValidation.NormalizePrice(stockModel.Price),
                 Quantity = stockModel.Quantity,
-                MarketCap = stockModel.MarketCap,
+                MarketCap = StockPriceValidation.NormalizeMarketCap(stockModel.MarketCap),
                 Offers = (stockModel.Offers ?? new List<Offer>()).Select(c => c.ToOfferDto()).ToList(),
             };
         }
