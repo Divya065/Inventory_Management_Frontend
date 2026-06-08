@@ -1,0 +1,8 @@
+{
+  "installCommand": "npm install --prefix \"Project 1/frontend\"",
+  "buildCommand": "npm run build --prefix \"Project 1/frontend\"",
+  "outputDirectory": "Project 1/frontend/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
