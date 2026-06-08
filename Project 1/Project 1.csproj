@@ -12,7 +12,7 @@
   <ItemGroup>
     <Content Update="appsettings.json" CopyToPublishDirectory="Never" />
     <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
-    <Content Update="appsettings.Public.json" CopyToPublishDirectory="PreserveNewest" />
+    <Content Update="appsettings.Public.json" CopyToPublishDirectory="Never" />
     <Content Update="frontend/**" CopyToPublishDirectory="Never" />
     <Content Update="somee-appsettings.Production.template.json" CopyToPublishDirectory="Never" />
   </ItemGroup>

@@ -1,7 +1,7 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
@@ -79,17 +79,23 @@ builder.Services.AddAuthentication(options => {
     options.DefaultSignInScheme =
     options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options => {
-    options.TokenValidationParameters = new TokenValidationParameters
+  var config = builder.Configuration;
+  options.TokenValidationParameters = new TokenValidationParameters
+  {
+    ValidateIssuer = true,
+    ValidIssuer = config["Jwt:Issuer"],
+    ValidateAudience = true,
+    ValidAudience = config["Jwt:Audience"],
+    ValidateIssuerSigningKey = true,
+    ValidateLifetime = true,
+    ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha512 },
+    // Resolve key on each request — fixes .NET 8 + Somee config reload issues
+    IssuerSigningKeyResolver = (_, __, ___, ____) =>
     {
-        ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-        System.Text.Encoding.UTF8.GetBytes(GetJwtSigningKey(builder.Configuration))
-        )
-    };
+      var keyBytes = Encoding.UTF8.GetBytes(GetJwtSigningKey(config));
+      return new[] { new SymmetricSecurityKey(keyBytes) };
+    },
+  };
 });
 builder.Services.AddScoped<IOfferRepository, OfferRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
@@ -108,7 +114,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins(corsOrigins)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+                if (corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase)) return true;
+                return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                       && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase);
+              })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
