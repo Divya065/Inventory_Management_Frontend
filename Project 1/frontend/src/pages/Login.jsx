@@ -36,14 +36,13 @@ const Login = () => {
         if (token && user) {
           navigate('/')
         } else {
-          setError('Login successful but token not saved. Please try again.')
+          setError('Error')
         }
       } else {
-        const errorMsg = result.error || 'Login failed. Please try again.'
-        setError(errorMsg)
+        setError('Error')
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+      setError('Error')
     } finally {
       setLoading(false)
     }
