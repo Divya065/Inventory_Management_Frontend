@@ -209,11 +209,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Use CORS - must be before UseAuthentication and UseAuthorization
 app.UseCors("AllowReactApp");
@@ -224,6 +221,9 @@ app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+app.MapGet("/", () => Results.Ok(new { status = "running", service = "Inventory API" }));
+app.MapGet("/api/health", () => Results.Ok("ok"));
 
 app.MapControllers();
 

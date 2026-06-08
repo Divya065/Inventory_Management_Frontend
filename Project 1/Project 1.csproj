@@ -5,7 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Project_1</RootNamespace>
-	 <InvariantGlobalization>false</InvariantGlobalization>
+    <AssemblyName>InventoryApi</AssemblyName>
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
