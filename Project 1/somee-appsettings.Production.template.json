@@ -1,0 +1,25 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=YOUR-SOMEE-SQL-SERVER;Database=YOUR-DB-NAME;User Id=YOUR-SQL-USER;Password=YOUR-SQL-PASSWORD;TrustServerCertificate=True;"
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://YOUR-APP.vercel.app"
+    ]
+  },
+  "Jwt": {
+    "Issuer": "https://YOUR-USERNAME.somee.com",
+    "Audience": "https://YOUR-USERNAME.somee.com",
+    "SigningKey": "CHANGE-THIS-TO-A-LONG-RANDOM-SECRET-KEY"
+  },
+  "Razorpay": {
+    "KeyId": "rzp_test_xxx",
+    "KeySecret": "your_razorpay_secret",
+    "WebhookSecret": ""
+  },
+  "Upi": {
+    "MerchantVpa": "your@upi",
+    "MerchantName": "My Store"
+  }
+}

@@ -101,12 +101,14 @@ builder.Services.AddScoped<RazorpayService>();
 builder.Services.Configure<UpiSettings>(builder.Configuration.GetSection("Upi"));
 builder.Services.Configure<RazorpaySettings>(builder.Configuration.GetSection("Razorpay"));
 
-// Add CORS
+// Add CORS — set Cors:AllowedOrigins in appsettings (include your Vercel + Somee URLs)
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:3000", "http://127.0.0.1:3000" };
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:3000")
+        policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

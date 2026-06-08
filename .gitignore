@@ -51,6 +51,17 @@ appsettings.*.json
 .env
 .env.*
 
+# Local deploy secrets (never commit)
+Project 1/appsettings.Production.json
+Project 1/.vscode/sftp.json
+
+# Publish output folder (only zip needed)
+Project 1/publish-somee/
+
+# Frontend env files with secrets
+Project 1/frontend/.env.production
+Project 1/frontend/.env.local
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
