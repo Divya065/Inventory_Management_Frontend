@@ -16,12 +16,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedUser = sessionStorage.getItem('user')
-    const token = sessionStorage.getItem('token')
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser))
+    const syncSession = () => {
+      const storedUser = sessionStorage.getItem('user')
+      const token = sessionStorage.getItem('token')
+      if (storedUser && token) {
+        setUser(JSON.parse(storedUser))
+      } else {
+        sessionStorage.removeItem('user')
+        sessionStorage.removeItem('token')
+        setUser(null)
+      }
+      setLoading(false)
     }
-    setLoading(false)
+
+    const handleLogout = () => {
+      authService.logout()
+      setUser(null)
+    }
+
+    syncSession()
+    window.addEventListener('auth:logout', handleLogout)
+    return () => window.removeEventListener('auth:logout', handleLogout)
   }, [])
 
   const login = async (username, password) => {
@@ -180,7 +195,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!sessionStorage.getItem('token'),
     loading,
   }
 

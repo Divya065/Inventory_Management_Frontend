@@ -8,7 +8,9 @@ const ProtectedRoute = ({ children }) => {
     return <div>Loading...</div>
   }
 
-  if (!isAuthenticated) {
+  const hasToken = !!sessionStorage.getItem('token')
+
+  if (!isAuthenticated || !hasToken) {
     return <Navigate to="/login" replace />
   }
 

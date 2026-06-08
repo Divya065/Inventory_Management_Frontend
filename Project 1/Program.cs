@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -80,6 +81,11 @@ builder.Services.AddAuthentication(options => {
     options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options => {
   var config = builder.Configuration;
+
+  // .NET 8 defaults to JsonWebTokenHandler which breaks some symmetric-key JWTs on IIS/Somee
+  options.TokenHandlers.Clear();
+  options.TokenHandlers.Add(new JwtSecurityTokenHandler());
+
   options.TokenValidationParameters = new TokenValidationParameters
   {
     ValidateIssuer = true,
@@ -89,7 +95,6 @@ builder.Services.AddAuthentication(options => {
     ValidateIssuerSigningKey = true,
     ValidateLifetime = true,
     ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha512 },
-    // Resolve key on each request — fixes .NET 8 + Somee config reload issues
     IssuerSigningKeyResolver = (_, __, ___, ____) =>
     {
       var keyBytes = Encoding.UTF8.GetBytes(GetJwtSigningKey(config));
