@@ -3,6 +3,7 @@
   "buildCommand": "npm run build --prefix \"Project 1/frontend\"",
   "outputDirectory": "Project 1/frontend/dist",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "http://dp01.somee.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
