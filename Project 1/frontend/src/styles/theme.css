@@ -185,6 +185,26 @@ body {
   box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
+/* Keep autofill from forcing a white/yellow input background (common on name/SKU text fields). */
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus,
+.form-group textarea:-webkit-autofill,
+.form-group textarea:-webkit-autofill:hover,
+.form-group textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-text) !important;
+  caret-color: var(--color-text);
+  box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+  border-color: var(--color-border-strong);
+}
+
+.form-group input:autofill,
+.form-group textarea:autofill {
+  box-shadow: 0 0 0 1000px var(--color-bg) inset !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+  caret-color: var(--color-text);
+}
+
 /* Page layout */
 .page {
   animation: fadeIn 0.35s ease;
@@ -362,6 +382,14 @@ body {
 .modal-box h3 {
   color: var(--color-text);
   font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
 .modal-total {

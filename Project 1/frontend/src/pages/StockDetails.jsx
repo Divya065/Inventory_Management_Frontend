@@ -5,6 +5,7 @@ import { offerService } from '../services/offerService'
 import { useAuth } from '../contexts/AuthContext'
 import { useCurrency } from '../contexts/CurrencyContext'
 import { displayPrice } from '../utils/stockPrice'
+import { useAppDialog } from '../hooks/useAppDialog'
 import './StockDetails.css'
 
 const StockDetails = () => {
@@ -12,6 +13,7 @@ const StockDetails = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const { currency, formatMoney } = useCurrency()
+  const { showAlert, showConfirm, AppDialog } = useAppDialog()
   const [stock, setStock] = useState(null)
   const [offers, setOffers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -73,16 +75,16 @@ const StockDetails = () => {
   const handleOfferSubmit = async (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
-      alert('Please login to add offers')
+      await showAlert('Please login to add offers', { variant: 'error' })
       return
     }
 
     if (!offerForm.title || offerForm.title.trim().length < 5) {
-      alert('Title must be at least 5 characters long')
+      await showAlert('Title must be at least 5 characters long', { variant: 'error' })
       return
     }
     if (!offerForm.content || offerForm.content.trim().length < 5) {
-      alert('Content must be at least 5 characters long')
+      await showAlert('Content must be at least 5 characters long', { variant: 'error' })
       return
     }
 
@@ -125,20 +127,24 @@ const StockDetails = () => {
           }
         }
       }
-      alert(`Error: ${errorMessage}`)
+      await showAlert(errorMessage, { variant: 'error' })
     }
   }
 
   const handleDeleteOffer = async (offerId) => {
-    if (window.confirm('Are you sure you want to delete this offer?')) {
-      try {
-        await offerService.delete(offerId)
-        await loadOffers()
-      } catch (err) {
-        const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete offer'
-        alert(`Error: ${errorMsg}`)
-        console.error('Error deleting offer:', err)
-      }
+    const ok = await showConfirm('Are you sure you want to delete this offer?', {
+      title: 'Delete offer',
+      confirmText: 'Delete',
+    })
+    if (!ok) return
+
+    try {
+      await offerService.delete(offerId)
+      await loadOffers()
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete offer'
+      await showAlert(errorMsg, { variant: 'error' })
+      console.error('Error deleting offer:', err)
     }
   }
 
@@ -157,6 +163,7 @@ const StockDetails = () => {
 
   return (
     <div className="stock-details-page">
+      <AppDialog />
       <div className="stock-details-header">
         <Link to="/stocks" className="btn btn-secondary">← Back to Inventory</Link>
         {isAuthenticated && (

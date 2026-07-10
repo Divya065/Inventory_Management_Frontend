@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { testAuth } from '../utils/testAuth'
+import { useAppDialog } from '../hooks/useAppDialog'
 import './AuthTest.css'
 
 const AuthTest = () => {
   const { user, isAuthenticated } = useAuth()
+  const { showAlert, showConfirm, AppDialog } = useAppDialog()
   const [testResults, setTestResults] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -47,6 +49,7 @@ const AuthTest = () => {
 
   return (
     <div className="auth-test-page">
+      <AppDialog />
       <h1>Authentication Status</h1>
       
       <div className="test-section">
@@ -75,9 +78,9 @@ const AuthTest = () => {
                 <div>✅ Exists ({storage.token.length} characters)</div>
                 <div className="token-preview">{storage.token.preview}</div>
                 <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(storage.token.full)
-                    alert('Token copied to clipboard!')
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(storage.token.full)
+                    await showAlert('Token copied to clipboard!', { variant: 'success' })
                   }}
                   className="btn btn-sm"
                 >
@@ -130,19 +133,24 @@ const AuthTest = () => {
         <h2>Quick Actions</h2>
         <div className="actions">
           <button 
-            onClick={() => {
+            onClick={async () => {
               console.log('Token:', localStorage.getItem('token'))
               console.log('User:', localStorage.getItem('user'))
-              alert('Check console (F12) for token and user data')
+              await showAlert('Check console (F12) for token and user data')
             }}
             className="btn btn-secondary"
           >
             Log to Console
           </button>
           <button 
-            onClick={() => {
+            onClick={async () => {
+              const ok = await showConfirm('Clear all LocalStorage data? The page will refresh.', {
+                title: 'Clear LocalStorage',
+                confirmText: 'Clear',
+              })
+              if (!ok) return
               localStorage.clear()
-              alert('LocalStorage cleared! Refresh the page.')
+              await showAlert('LocalStorage cleared! Refreshing the page...', { variant: 'success' })
               window.location.reload()
             }}
             className="btn btn-danger"

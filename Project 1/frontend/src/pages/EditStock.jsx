@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
 import { useCurrency } from '../contexts/CurrencyContext'
-import {
-  getStockPriceValidationError,
-  sanitizeNonNegativeDecimalInput,
-} from '../utils/stockPrice'
+import FormValidationBanner from '../components/FormValidationBanner'
+import { sanitizeNonNegativeDecimalInput } from '../utils/stockPrice'
+import { validateStockForm } from '../utils/stockFormValidation'
 import './StockForm.css'
 
 const formatForInput = (n, digits = 2) => {
@@ -26,7 +25,9 @@ const EditStock = () => {
     Quantity: '',
     MarketCap: '',
   })
-  const [error, setError] = useState('')
+  const [serverError, setServerError] = useState('')
+  const [validationSummary, setValidationSummary] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [loadingStock, setLoadingStock] = useState(true)
 
@@ -40,18 +41,25 @@ const EditStock = () => {
       setFormData({
         Symbol: stock.symbol || '',
         CompanyName: stock.companyName || '',
-        // Convert INR base -> selected currency for editing
         Price: formatForInput(convertFromInr(stock.price), 2),
         Quantity: stock.quantity?.toString() || '',
         MarketCap: formatForInput(convertFromInr(stock.marketCap), 2),
       })
-      setError('')
+      setServerError('')
+      setValidationSummary('')
+      setFieldErrors({})
     } catch (err) {
-      setError('Failed to load stock')
+      setServerError('Failed to load item details.')
       console.error(err)
     } finally {
       setLoadingStock(false)
     }
+  }
+
+  const clearErrors = () => {
+    setServerError('')
+    setValidationSummary('')
+    setFieldErrors({})
   }
 
   const handleChange = (e) => {
@@ -64,25 +72,28 @@ const EditStock = () => {
       ...formData,
       [name]: nextValue,
     })
-    setError('')
+    clearErrors()
   }
+
+  const inputClass = (name) => (fieldErrors[name] ? 'input-invalid' : '')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    clearErrors()
+
+    const validation = validateStockForm(formData, { requireSymbol: true })
+    if (!validation.valid) {
+      setValidationSummary(validation.summary)
+      setFieldErrors(validation.fieldErrors)
+      return
+    }
+
     setLoading(true)
 
     try {
-      const priceError = getStockPriceValidationError(formData.Price, formData.MarketCap)
-      if (priceError) {
-        setError(priceError)
-        setLoading(false)
-        return
-      }
-
       const stockData = {
-        Symbol: formData.Symbol,
-        CompanyName: formData.CompanyName,
+        Symbol: formData.Symbol.trim(),
+        CompanyName: formData.CompanyName.trim(),
         Price: convertToInr(parseFloat(formData.Price)),
         Quantity: parseInt(formData.Quantity, 10),
         MarketCap: Math.round(convertToInr(parseFloat(formData.MarketCap))),
@@ -90,7 +101,7 @@ const EditStock = () => {
       await stockService.update(id, stockData)
       navigate(`/stocks/${id}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update stock. Please try again.')
+      setServerError(err.response?.data?.message || 'Failed to update item. Please try again.')
       console.error(err)
     } finally {
       setLoading(false)
@@ -111,8 +122,13 @@ const EditStock = () => {
       </div>
 
       <div className="stock-form-card">
-        <form onSubmit={handleSubmit} className="stock-form">
-          {error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit} className="stock-form" noValidate>
+          <FormValidationBanner
+            title="Unable to save changes"
+            message={validationSummary}
+            fieldErrors={fieldErrors}
+          />
+          {serverError ? <div className="form-server-error">{serverError}</div> : null}
 
           <div className="form-row">
             <div className="form-group">
@@ -123,22 +139,28 @@ const EditStock = () => {
                 name="CompanyName"
                 value={formData.CompanyName}
                 onChange={handleChange}
-                required
+                className={inputClass('CompanyName')}
+                aria-invalid={!!fieldErrors.CompanyName}
+                autoComplete="off"
                 placeholder="Product name"
               />
+              {fieldErrors.CompanyName ? <span className="field-error">{fieldErrors.CompanyName}</span> : null}
             </div>
 
             <div className="form-group">
-              <label htmlFor="Symbol">SKU / Code</label>
+              <label htmlFor="Symbol">SKU / Code *</label>
               <input
                 type="text"
                 id="Symbol"
                 name="Symbol"
                 value={formData.Symbol}
                 onChange={handleChange}
-                required
+                className={inputClass('Symbol')}
+                aria-invalid={!!fieldErrors.Symbol}
+                autoComplete="off"
                 placeholder="e.g., AU002"
               />
+              {fieldErrors.Symbol ? <span className="field-error">{fieldErrors.Symbol}</span> : null}
             </div>
           </div>
 
@@ -151,11 +173,13 @@ const EditStock = () => {
                 name="Price"
                 value={formData.Price}
                 onChange={handleChange}
-                required
+                className={inputClass('Price')}
+                aria-invalid={!!fieldErrors.Price}
                 step="0.01"
-                min="0"
-                placeholder="0.00"
+                min="0.01"
+                placeholder="Enter selling price"
               />
+              {fieldErrors.Price ? <span className="field-error">{fieldErrors.Price}</span> : null}
             </div>
 
             <div className="form-group">
@@ -166,10 +190,12 @@ const EditStock = () => {
                 name="Quantity"
                 value={formData.Quantity}
                 onChange={handleChange}
-                required
+                className={inputClass('Quantity')}
+                aria-invalid={!!fieldErrors.Quantity}
                 min="1"
-                placeholder="1"
+                placeholder="Enter quantity"
               />
+              {fieldErrors.Quantity ? <span className="field-error">{fieldErrors.Quantity}</span> : null}
             </div>
           </div>
 
@@ -181,11 +207,13 @@ const EditStock = () => {
               name="MarketCap"
               value={formData.MarketCap}
               onChange={handleChange}
-              required
+              className={inputClass('MarketCap')}
+              aria-invalid={!!fieldErrors.MarketCap}
               step="0.01"
-              min="0"
-              placeholder="0.00"
+              min="0.01"
+              placeholder="Enter MRP"
             />
+            {fieldErrors.MarketCap ? <span className="field-error">{fieldErrors.MarketCap}</span> : null}
           </div>
 
           <div className="form-actions">
@@ -207,11 +235,3 @@ const EditStock = () => {
 }
 
 export default EditStock
-
-
-
-
-
-
-
-

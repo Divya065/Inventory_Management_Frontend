@@ -137,16 +137,14 @@ const buildPaymentBreakdown = (buys) => {
       const amount = Number(t.total) || 0
       if (method.includes('cash')) acc.cash += amount
       else if (method.includes('razorpay') || method.includes('online') || method.includes('upi')) acc.online += amount
-      else acc.other += amount
       return acc
     },
-    { cash: 0, online: 0, other: 0 }
+    { cash: 0, online: 0 }
   )
 
   return [
     { label: 'Cash', value: totals.cash },
     { label: 'Online', value: totals.online },
-    { label: 'Other', value: totals.other },
   ]
 }
 

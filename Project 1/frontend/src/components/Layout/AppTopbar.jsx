@@ -31,16 +31,19 @@ const AppTopbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [showMenu, setShowMenu] = useState(false)
+  const [currencyOpen, setCurrencyOpen] = useState(false)
   const menuRef = useRef(null)
+  const currencyRef = useRef(null)
   const pageTitle = getPageTitle(location.pathname)
 
   useEffect(() => {
     const onOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false)
+      if (currencyRef.current && !currencyRef.current.contains(e.target)) setCurrencyOpen(false)
     }
-    if (showMenu) document.addEventListener('mousedown', onOutside)
+    if (showMenu || currencyOpen) document.addEventListener('mousedown', onOutside)
     return () => document.removeEventListener('mousedown', onOutside)
-  }, [showMenu])
+  }, [showMenu, currencyOpen])
 
   const handleLogout = () => {
     logout()
@@ -73,19 +76,38 @@ const AppTopbar = () => {
             >
               {theme === 'dark' ? 'Light' : 'Dark'}
             </button>
-            <div className="app-topbar-currency" title="Currency for dashboard totals">
+            <div className="app-topbar-currency" ref={currencyRef} title="Currency for dashboard totals">
               <span className="app-topbar-currency-label">Currency</span>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
+              <button
+                type="button"
+                className="app-topbar-currency-trigger"
+                onClick={() => setCurrencyOpen((open) => !open)}
+                aria-haspopup="listbox"
+                aria-expanded={currencyOpen}
                 aria-label="Select currency"
               >
-                {supported.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                <span className="app-topbar-currency-value">{currency}</span>
+                <span className="app-topbar-currency-chevron" aria-hidden />
+              </button>
+              {currencyOpen && (
+                <div className="app-topbar-currency-menu" role="listbox" aria-label="Currency options">
+                  {supported.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      role="option"
+                      aria-selected={c === currency}
+                      className={`app-topbar-currency-option${c === currency ? ' is-active' : ''}`}
+                      onClick={() => {
+                        setCurrency(c)
+                        setCurrencyOpen(false)
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <Link to="/cart" className="app-topbar-new-sale">
               New sale

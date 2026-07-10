@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { transactionService } from '../services/transactionService'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { useAppDialog } from '../hooks/useAppDialog'
+import { getOutstandingLoanInr, validateLoanPaymentAmount } from '../utils/loanPayment'
 import './Loans.css'
 
 const Loans = () => {
-  const { currency, formatMoney, convertToInr } = useCurrency()
+  const { currency, formatMoney, convertToInr, convertFromInr } = useCurrency()
+  const { showConfirm, AppDialog } = useAppDialog()
   const [loans, setLoans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [detailModal, setDetailModal] = useState(null) // { customerName, transactions: [] }
   const [detailLoading, setDetailLoading] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
+  const [paymentError, setPaymentError] = useState('')
   const [paymentSubmitting, setPaymentSubmitting] = useState(false)
 
   useEffect(() => {
@@ -37,6 +41,7 @@ const Loans = () => {
     setDetailLoading(true)
     setDetailModal({ customerName, transactions: [] })
     setPaymentAmount('')
+    setPaymentError('')
     try {
       const data = await transactionService.getLoansByCustomer(customerName)
       const list = Array.isArray(data) ? data : []
@@ -54,11 +59,15 @@ const Loans = () => {
   const closeDetail = () => {
     setDetailModal(null)
     setPaymentAmount('')
+    setPaymentError('')
     loadLoans()
   }
 
   const handleDeleteLoanEntry = async (id) => {
-    const ok = window.confirm('Delete this loan/payment entry?')
+    const ok = await showConfirm('Delete this loan/payment entry?', {
+      title: 'Delete entry',
+      confirmText: 'Delete',
+    })
     if (!ok) return
     try {
       setError('')
@@ -75,7 +84,10 @@ const Loans = () => {
   }
 
   const handleDeleteCustomerLoans = async (customerName) => {
-    const ok = window.confirm(`Delete all loan and payment records for "${customerName}"? This cannot be undone.`)
+    const ok = await showConfirm(
+      `Delete all loan and payment records for "${customerName}"? This cannot be undone.`,
+      { title: 'Delete all records', confirmText: 'Delete all' }
+    )
     if (!ok) return
     try {
       setError('')
@@ -93,12 +105,22 @@ const Loans = () => {
   const handleRecordPayment = async (e) => {
     e.preventDefault()
     if (!detailModal?.customerName) return
-    const amount = parseFloat(paymentAmount)
-    if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount greater than 0')
+
+    const outstandingInr = getOutstandingLoanInr(detailModal.transactions)
+    const validationError = validateLoanPaymentAmount(
+      paymentAmount,
+      outstandingInr,
+      convertToInr,
+      formatMoney
+    )
+    if (validationError) {
+      setPaymentError(validationError)
       return
     }
+
+    const amount = parseFloat(paymentAmount)
     setPaymentSubmitting(true)
+    setPaymentError('')
     try {
       await transactionService.create({
         customerName: detailModal.customerName,
@@ -110,11 +132,20 @@ const Loans = () => {
       setDetailModal(prev => ({ ...prev, transactions: Array.isArray(data) ? data : [] }))
       loadLoans()
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to record payment')
+      const msg = err.response?.data?.message || err.message || 'Failed to record payment'
+      setPaymentError(msg)
     } finally {
       setPaymentSubmitting(false)
     }
   }
+
+  const outstandingInr = detailModal?.transactions
+    ? getOutstandingLoanInr(detailModal.transactions)
+    : 0
+  const maxPaymentDisplay =
+    outstandingInr > 0
+      ? Math.round(convertFromInr(outstandingInr) * 100) / 100
+      : undefined
 
   if (loading) {
     return (
@@ -126,6 +157,7 @@ const Loans = () => {
 
   return (
     <div className="loans-page page">
+      <AppDialog />
       <div className="loans-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
           <div>
@@ -268,17 +300,35 @@ const Loans = () => {
                 </div>
                 <div className="loan-detail-record-payment">
                   <h4>Record payment</h4>
-                  <form onSubmit={handleRecordPayment}>
+                  <p className="loan-outstanding-text">
+                    Outstanding loan: <strong>{formatMoney(outstandingInr)}</strong>
+                  </p>
+                  {paymentError ? (
+                    <div className="loan-payment-error" role="alert">
+                      {paymentError}
+                    </div>
+                  ) : null}
+                  <form onSubmit={handleRecordPayment} noValidate>
                     <input
                       type="number"
                       step="0.01"
                       min="0.01"
+                      max={maxPaymentDisplay}
                       placeholder={`Amount (${currency})`}
                       value={paymentAmount}
-                      onChange={e => setPaymentAmount(e.target.value)}
-                      className="loan-payment-input"
+                      onChange={(e) => {
+                        setPaymentAmount(e.target.value)
+                        setPaymentError('')
+                      }}
+                      className={`loan-payment-input${paymentError ? ' loan-payment-input--invalid' : ''}`}
+                      aria-invalid={!!paymentError}
+                      disabled={outstandingInr <= 0}
                     />
-                    <button type="submit" className="btn btn-primary" disabled={paymentSubmitting}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={paymentSubmitting || outstandingInr <= 0}
+                    >
                       {paymentSubmitting ? 'Saving...' : 'Record payment'}
                     </button>
                   </form>

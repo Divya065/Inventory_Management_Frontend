@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { stockService } from '../services/stockService'
 import { useCurrency } from '../contexts/CurrencyContext'
-import {
-  getStockPriceValidationError,
-  sanitizeNonNegativeDecimalInput,
-} from '../utils/stockPrice'
+import FormValidationBanner from '../components/FormValidationBanner'
+import { sanitizeNonNegativeDecimalInput } from '../utils/stockPrice'
+import { validateStockForm } from '../utils/stockFormValidation'
 import './StockForm.css'
 
 const CreateStock = () => {
@@ -18,7 +17,9 @@ const CreateStock = () => {
     Quantity: '',
     MarketCap: '',
   })
-  const [error, setError] = useState('')
+  const [serverError, setServerError] = useState('')
+  const [validationSummary, setValidationSummary] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [loading, setLoading] = useState(false)
 
   const generateSku = (name) => {
@@ -36,6 +37,12 @@ const CreateStock = () => {
     return `${base}${suffix}`
   }
 
+  const clearErrors = () => {
+    setServerError('')
+    setValidationSummary('')
+    setFieldErrors({})
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     const nextValue =
@@ -46,43 +53,39 @@ const CreateStock = () => {
       ...formData,
       [name]: nextValue,
     })
-    setError('')
+    clearErrors()
   }
+
+  const inputClass = (name) => (fieldErrors[name] ? 'input-invalid' : '')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    clearErrors()
+
+    const validation = validateStockForm(formData)
+    if (!validation.valid) {
+      setValidationSummary(validation.summary)
+      setFieldErrors(validation.fieldErrors)
+      return
+    }
+
     setLoading(true)
 
     try {
       const name = String(formData.CompanyName || '').trim()
-      if (!name) {
-        setError('Product name is required.')
-        setLoading(false)
-        return
-      }
-
-      const priceError = getStockPriceValidationError(formData.Price, formData.MarketCap)
-      if (priceError) {
-        setError(priceError)
-        setLoading(false)
-        return
-      }
-
       const symbol = String(formData.Symbol || '').trim() || generateSku(name)
       const stockData = {
         ...formData,
         Symbol: symbol,
-        // User enters selected currency; backend stores INR base
+        CompanyName: name,
         Price: convertToInr(parseFloat(formData.Price)),
         Quantity: parseInt(formData.Quantity, 10),
         MarketCap: Math.round(convertToInr(parseFloat(formData.MarketCap))),
       }
-      const created = await stockService.create(stockData)
-      // Navigate to the stocks list instead of details to avoid loading errors
+      await stockService.create(stockData)
       navigate('/stocks', { replace: true })
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create stock. Please try again.')
+      setServerError(err.response?.data?.message || 'Failed to create item. Please try again.')
       console.error(err)
     } finally {
       setLoading(false)
@@ -99,8 +102,13 @@ const CreateStock = () => {
       </div>
 
       <div className="stock-form-card">
-        <form onSubmit={handleSubmit} className="stock-form">
-          {error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit} className="stock-form" noValidate>
+          <FormValidationBanner
+            title="Unable to create item"
+            message={validationSummary}
+            fieldErrors={fieldErrors}
+          />
+          {serverError ? <div className="form-server-error">{serverError}</div> : null}
 
           <div className="form-row">
             <div className="form-group">
@@ -111,9 +119,12 @@ const CreateStock = () => {
                 name="CompanyName"
                 value={formData.CompanyName}
                 onChange={handleChange}
-                required
+                className={inputClass('CompanyName')}
+                aria-invalid={!!fieldErrors.CompanyName}
+                autoComplete="off"
                 placeholder="e.g., Tim Tam Original Biscuits"
               />
+              {fieldErrors.CompanyName ? <span className="field-error">{fieldErrors.CompanyName}</span> : null}
             </div>
 
             <div className="form-group">
@@ -124,6 +135,7 @@ const CreateStock = () => {
                 name="Symbol"
                 value={formData.Symbol}
                 onChange={handleChange}
+                autoComplete="off"
                 placeholder="Auto-generated if empty"
               />
             </div>
@@ -138,11 +150,13 @@ const CreateStock = () => {
                 name="Price"
                 value={formData.Price}
                 onChange={handleChange}
-                required
+                className={inputClass('Price')}
+                aria-invalid={!!fieldErrors.Price}
                 step="0.01"
-                min="0"
-                placeholder="0.00"
+                min="0.01"
+                placeholder="Enter selling price"
               />
+              {fieldErrors.Price ? <span className="field-error">{fieldErrors.Price}</span> : null}
             </div>
 
             <div className="form-group">
@@ -153,10 +167,12 @@ const CreateStock = () => {
                 name="Quantity"
                 value={formData.Quantity}
                 onChange={handleChange}
-                required
+                className={inputClass('Quantity')}
+                aria-invalid={!!fieldErrors.Quantity}
                 min="1"
-                placeholder="1"
+                placeholder="Enter quantity"
               />
+              {fieldErrors.Quantity ? <span className="field-error">{fieldErrors.Quantity}</span> : null}
             </div>
           </div>
 
@@ -168,11 +184,13 @@ const CreateStock = () => {
               name="MarketCap"
               value={formData.MarketCap}
               onChange={handleChange}
-              required
+              className={inputClass('MarketCap')}
+              aria-invalid={!!fieldErrors.MarketCap}
               step="0.01"
-              min="0"
-              placeholder="0.00"
+              min="0.01"
+              placeholder="Enter MRP"
             />
+            {fieldErrors.MarketCap ? <span className="field-error">{fieldErrors.MarketCap}</span> : null}
           </div>
 
           <div className="form-actions">
@@ -194,16 +212,3 @@ const CreateStock = () => {
 }
 
 export default CreateStock
-
-
-
-
-
-
-
-
-
-
-
-
-

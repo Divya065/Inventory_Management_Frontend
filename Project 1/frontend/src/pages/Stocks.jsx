@@ -4,6 +4,7 @@ import { stockService } from '../services/stockService'
 import { tokenHelper } from '../utils/tokenHelper'
 import { useCurrency } from '../contexts/CurrencyContext'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { useAppDialog } from '../hooks/useAppDialog'
 import { displayPrice } from '../utils/stockPrice'
 import './Stocks.css'
 
@@ -30,6 +31,7 @@ const getOriginalPrice = (price, marketCap) => {
 
 const Stocks = () => {
   const { formatMoney, formatCompactMoney } = useCurrency()
+  const { showAlert, AppDialog } = useAppDialog()
   const [stocks, setStocks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -139,7 +141,7 @@ const Stocks = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to delete item'
       setConfirmDelete(null)
-      alert(`Error: ${errorMsg}`)
+      await showAlert(errorMsg, { variant: 'error' })
     }
   }
 
@@ -176,6 +178,7 @@ const Stocks = () => {
 
   return (
     <div className="stocks-page page">
+      <AppDialog />
       <ConfirmDialog
         open={!!confirmDelete}
         title="Delete item?"

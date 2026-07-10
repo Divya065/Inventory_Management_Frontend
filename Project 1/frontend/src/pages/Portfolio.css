@@ -226,43 +226,59 @@
   box-shadow: var(--shadow-sm);
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
+.modal-box.buy-payment-modal {
+  width: 100%;
+  max-width: 380px;
+  min-width: 0;
+  padding: 1.4rem 1.5rem 1.25rem;
+  border-top: 3px solid var(--color-primary);
+}
+
+.modal-box.buy-payment-modal h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.modal-box.buy-payment-modal .modal-total {
+  margin: 0 0 1.1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.modal-box.buy-payment-modal .buy-payment-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  gap: 0.6rem;
 }
 
-.modal-box {
-  padding: 1.75rem;
-  min-width: 320px;
-  max-width: 90vw;
-}
-
-.modal-box--wide {
-  max-width: 420px;
-}
-
-.buy-payment-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-.buy-payment-actions .btn {
+.modal-box.buy-payment-modal .buy-payment-actions .btn {
   flex: 1;
-  min-width: 120px;
+  min-width: 0;
+  padding: 0.62rem 0.85rem;
+  font-size: 0.9rem;
 }
 
-.modal-actions {
+.buy-payment-footer {
+  margin-top: 0.85rem;
   display: flex;
-  gap: 0.75rem;
   justify-content: flex-end;
-  margin-top: 1rem;
+}
+
+.buy-payment-footer .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+:root[data-theme='dark'] .modal-box.buy-payment-modal {
+  border-top-color: var(--color-accent);
+}
+
+:root[data-theme='dark'] .modal-box.buy-payment-modal .modal-total {
+  background: rgba(96, 165, 250, 0.12);
+  color: #93c5fd;
 }
 
 @media (max-width: 768px) {

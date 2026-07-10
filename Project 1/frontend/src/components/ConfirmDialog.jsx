@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import './ConfirmDialog.css'
 
 export default function ConfirmDialog({
   open,
@@ -7,25 +8,36 @@ export default function ConfirmDialog({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   confirmVariant = 'danger',
+  alert = false,
+  tone = 'confirm',
   onConfirm,
   onCancel,
 }) {
   if (!open) return null
 
   const confirmClass =
-    confirmVariant === 'danger' ? 'btn btn-danger' : confirmVariant === 'primary' ? 'btn btn-primary' : 'btn btn-secondary'
+    confirmVariant === 'danger'
+      ? 'btn btn-danger'
+      : confirmVariant === 'primary'
+        ? 'btn btn-primary'
+        : 'btn btn-secondary'
+
+  const toneClass =
+    tone === 'error' ? 'confirm-dialog-box--error' : tone === 'success' ? 'confirm-dialog-box--success' : tone === 'info' ? 'confirm-dialog-box--info' : ''
 
   return createPortal(
-    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true">
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
-        <h3 style={{ margin: 0 }}>{title}</h3>
-        {message ? (
-          <p style={{ marginTop: '0.65rem', color: 'var(--color-text-muted)', lineHeight: 1.55 }}>{message}</p>
-        ) : null}
-        <div className="modal-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
-            {cancelText}
-          </button>
+    <div className="modal-overlay" onClick={onCancel} role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+      <div className={`modal-box confirm-dialog-box ${toneClass}`} onClick={(e) => e.stopPropagation()}>
+        <h3 id="confirm-dialog-title" className="confirm-dialog-title">
+          {title}
+        </h3>
+        {message ? <p className="confirm-dialog-message">{message}</p> : null}
+        <div className="confirm-dialog-actions">
+          {!alert ? (
+            <button type="button" className="btn btn-secondary" onClick={onCancel}>
+              {cancelText}
+            </button>
+          ) : null}
           <button type="button" className={confirmClass} onClick={onConfirm}>
             {confirmText}
           </button>
@@ -35,4 +47,3 @@ export default function ConfirmDialog({
     document.body
   )
 }
-

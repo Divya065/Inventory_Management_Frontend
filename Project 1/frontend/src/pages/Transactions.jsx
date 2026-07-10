@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { transactionService } from '../services/transactionService'
 import CustomerReceiptModal from '../components/CustomerReceiptModal'
 import { useCurrency } from '../contexts/CurrencyContext'
+import { useAppDialog } from '../hooks/useAppDialog'
 import './Transactions.css'
 
 const Transactions = () => {
   const { currency, formatMoney } = useCurrency()
+  const { showConfirm, AppDialog } = useAppDialog()
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -60,7 +62,10 @@ const Transactions = () => {
   }
 
   const handleDeleteOne = async (id) => {
-    const ok = window.confirm('Are you sure you want to delete this transaction?')
+    const ok = await showConfirm('Are you sure you want to delete this transaction?', {
+      title: 'Delete transaction',
+      confirmText: 'Delete',
+    })
     if (!ok) return
 
     try {
@@ -82,6 +87,7 @@ const Transactions = () => {
 
   return (
     <div className="transactions-page page">
+      <AppDialog />
       {receiptTransaction ? (
         <CustomerReceiptModal
           transaction={receiptTransaction}

@@ -18,8 +18,10 @@ export function getStockPriceValidationError(priceValue, marketCapValue) {
   const marketCap = parseNonNegativeDecimal(marketCapValue)
 
   if (!Number.isFinite(price)) return 'Price is required.'
+  if (price <= 0) return 'Price must be greater than 0.'
   if (price < 0) return 'Price cannot be negative.'
   if (!Number.isFinite(marketCap)) return 'Original price (MRP) is required.'
+  if (marketCap <= 0) return 'Original price (MRP) must be greater than 0.'
   if (marketCap < 0) return 'Original price (MRP) cannot be negative.'
 
   return null

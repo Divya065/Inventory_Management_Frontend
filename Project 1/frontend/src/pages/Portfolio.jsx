@@ -12,10 +12,12 @@ import {
   sanitizeCustomerNameInput,
 } from '../utils/customerName'
 import { displayPrice } from '../utils/stockPrice'
+import { useAppDialog } from '../hooks/useAppDialog'
 import './Portfolio.css'
 
 const Portfolio = () => {
   const { currency, formatMoney } = useCurrency()
+  const { showAlert, showConfirm, AppDialog } = useAppDialog()
   // portfolio = your current cart items (loaded from backend)
   const [portfolio, setPortfolio] = useState([])
   const [loading, setLoading] = useState(true)
@@ -129,7 +131,7 @@ const Portfolio = () => {
   const handleAddStock = async (e) => {
     e.preventDefault()
     if (!symbol.trim()) {
-      alert('Please enter a stock symbol')
+      await showAlert('Please enter a stock symbol', { variant: 'error' })
       return
     }
     const raw = Math.max(1, parseInt(addQuantity, 10) || 1)
@@ -149,7 +151,7 @@ const Portfolio = () => {
       await loadPortfolio()
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to add item to cart'
-      alert(`Error: ${errorMsg}`)
+      await showAlert(errorMsg, { variant: 'error' })
       console.error('Error adding stock to portfolio:', err)
     } finally {
       setAdding(false)
@@ -234,7 +236,7 @@ const Portfolio = () => {
     }
     setCustomerNameError('')
     if (cartTotal <= 0) {
-      alert('Cart total must be greater than 0')
+      await showAlert('Cart total must be greater than 0', { variant: 'error' })
       return
     }
     setTransactionSubmitting(true)
@@ -288,7 +290,7 @@ const Portfolio = () => {
             } catch (err) {
               const data = err.response?.data
               const msg = data?.message || err.message || 'Payment verification failed.'
-              alert(msg)
+              await showAlert(msg, { variant: 'error' })
             }
           },
           modal: {
@@ -323,10 +325,10 @@ const Portfolio = () => {
         if (saved && String(saved.type || '').toLowerCase() === 'buy') {
           setReceiptTransaction(saved)
         } else {
-          alert('Buy transaction saved successfully!')
+          await showAlert('Buy transaction saved successfully!', { variant: 'success' })
         }
       } else {
-        alert(`${transactionType} transaction saved successfully!`)
+        await showAlert(`${transactionType} transaction saved successfully!`, { variant: 'success' })
       }
     } catch (err) {
       const data = err.response?.data
@@ -334,7 +336,7 @@ const Portfolio = () => {
       if (data?.error) msg += ` (${data.error})`
       if (data?.inner) msg += ` [${data.inner}]`
       if (transactionType === 'Buy' && buyPaymentMethod === 'Razorpay') setRazorpayError(msg)
-      alert(msg)
+      await showAlert(msg, { variant: 'error' })
       console.error(err)
     } finally {
       setTransactionSubmitting(false)
@@ -364,17 +366,21 @@ const Portfolio = () => {
   }
 
   const handleRemoveStock = async (stockSymbol) => {
-    if (window.confirm(`Are you sure you want to remove ${stockSymbol} from your cart?`)) {
-      try {
-        setError('') // Clear previous errors
-        await portfolioService.removeFromPortfolio(stockSymbol)
-        await loadPortfolio() // Reload portfolio after successful removal
-        alert('Item removed from cart successfully!')
-      } catch (err) {
-        const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to remove item from cart'
-        alert(`Error: ${errorMsg}`)
-        console.error('Error removing stock from portfolio:', err)
-      }
+    const ok = await showConfirm(`Are you sure you want to remove ${stockSymbol} from your cart?`, {
+      title: 'Remove from cart',
+      confirmText: 'Remove',
+    })
+    if (!ok) return
+
+    try {
+      setError('')
+      await portfolioService.removeFromPortfolio(stockSymbol)
+      await loadPortfolio()
+      await showAlert('Item removed from cart successfully!', { variant: 'success' })
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to remove item from cart'
+      await showAlert(errorMsg, { variant: 'error' })
+      console.error('Error removing stock from portfolio:', err)
     }
   }
 
@@ -384,6 +390,7 @@ const Portfolio = () => {
 
   return (
     <div className="portfolio-page page">
+      <AppDialog />
       {receiptTransaction ? (
         <CustomerReceiptModal transaction={receiptTransaction} onClose={() => setReceiptTransaction(null)} />
       ) : null}
@@ -490,22 +497,18 @@ const Portfolio = () => {
 
       {showBuyPaymentModal && (
         <div className="modal-overlay" onClick={closeBuyPaymentModal}>
-          <div className="modal-box modal-box--wide" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-box buy-payment-modal" onClick={(e) => e.stopPropagation()}>
             <h3>How will the customer pay?</h3>
             <p className="modal-total">Total: {formatMoney(cartTotal)}</p>
-            <p className="modal-hint">
-              Cash records the sale immediately. Online opens Razorpay’s payment window (UPI, card, etc.)—not a QR on this page. Configure{' '}
-              <code>Razorpay:KeyId</code> and <code>Razorpay:KeySecret</code> in <code>appsettings.json</code> and restart the API.
-            </p>
             <div className="buy-payment-actions">
               <button type="button" className="btn btn-secondary" onClick={handleChooseCashBuy}>
                 Cash
               </button>
               <button type="button" className="btn btn-primary" onClick={handleChooseUpiBuy}>
-                Online (Razorpay)
+                Online
               </button>
             </div>
-            <div className="modal-actions" style={{ marginTop: '1rem' }}>
+            <div className="buy-payment-footer">
               <button type="button" className="btn btn-secondary" onClick={closeBuyPaymentModal}>
                 Cancel
               </button>

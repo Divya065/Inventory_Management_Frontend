@@ -1,0 +1,40 @@
+.modal-box.confirm-dialog-box {
+  width: fit-content;
+  max-width: min(340px, 92vw);
+  min-width: 0;
+  padding: 1.15rem 1.25rem;
+}
+
+.confirm-dialog-box--error {
+  border-top: 3px solid #e74c3c;
+}
+
+.confirm-dialog-box--success {
+  border-top: 3px solid #22c55e;
+}
+
+.confirm-dialog-box--info {
+  border-top: 3px solid var(--color-primary, #667eea);
+}
+
+.confirm-dialog-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.confirm-dialog-message {
+  margin: 0.6rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.confirm-dialog-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}

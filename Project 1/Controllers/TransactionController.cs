@@ -270,6 +270,27 @@ namespace Project_1.Controllers
                 {
                     await _portfolioRepo.ClearUserPortfolioAsync(appUser.Id);
                 }
+                else if (string.Equals(transactionType, "LoanPayment", StringComparison.OrdinalIgnoreCase))
+                {
+                    var loanTransactions = await _transactionRepo.GetAllAsync(appUser.Id);
+                    var customerLoanRows = loanTransactions.Where(t =>
+                        string.Equals(t.CustomerName?.Trim(), customerName, StringComparison.OrdinalIgnoreCase)
+                        && (string.Equals(t.Type, "Loan", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(t.Type, "LoanPayment", StringComparison.OrdinalIgnoreCase)));
+
+                    var outstanding = customerLoanRows
+                        .Where(t => string.Equals(t.Type, "Loan", StringComparison.OrdinalIgnoreCase))
+                        .Sum(t => t.Total)
+                        - customerLoanRows
+                            .Where(t => string.Equals(t.Type, "LoanPayment", StringComparison.OrdinalIgnoreCase))
+                            .Sum(t => t.Total);
+
+                    if (outstanding <= 0)
+                        return BadRequest(new { message = "This customer has no outstanding loan to pay." });
+
+                    if (dto.Total > outstanding)
+                        return BadRequest(new { message = $"Payment cannot exceed outstanding loan of {outstanding:0.##}." });
+                }
 
                 var transaction = new Transaction
                 {
