@@ -24,7 +24,7 @@ namespace Project_1.Service
             
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
         }
-        public string CreateToken(AppUser user)
+        public string CreateToken(AppUser user, IEnumerable<string>? roles = null)
         {
             try
             {
@@ -43,8 +43,19 @@ namespace Project_1.Service
                 var claims = new List<Claim>
                 {
                     new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-                    new Claim(JwtRegisteredClaimNames.GivenName, user.UserName ?? string.Empty)
+                    new Claim(JwtRegisteredClaimNames.GivenName, user.UserName ?? string.Empty),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
                 };
+
+                if (roles != null)
+                {
+                    foreach (var role in roles)
+                    {
+                        if (!string.IsNullOrWhiteSpace(role))
+                            claims.Add(new Claim(ClaimTypes.Role, role));
+                    }
+                }
 
                 var issuer = _config["Jwt:Issuer"];
                 var audience = _config["Jwt:Audience"];

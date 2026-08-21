@@ -1,0 +1,225 @@
+.stock-offer-editor {
+  margin-top: 0.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.stock-offer-editor-head h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.stock-offer-editor-head p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.stock-offer-muted {
+  margin: 0.85rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.stock-offer-list {
+  list-style: none;
+  margin: 0.85rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.stock-offer-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.stock-offer-item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.stock-offer-item-body strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 0.25rem;
+}
+
+.stock-offer-item-body p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.stock-offer-item-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.4rem;
+}
+
+.stock-offer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px dashed rgba(148, 163, 184, 0.55);
+  border-radius: var(--radius-sm);
+  background: rgba(248, 250, 252, 0.7);
+}
+
+:root[data-theme='dark'] .stock-offer-form {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.stock-offer-form h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.stock-offer-form-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
+.stock-offer-bogo-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.stock-offer-bogo-check input {
+  margin-top: 0.2rem;
+}
+
+.stock-offer-deal-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.stock-offer-deal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.55rem;
+}
+
+.stock-offer-deal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.stock-offer-deal-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stock-offer-deal-card:hover {
+  border-color: var(--color-primary);
+}
+
+.stock-offer-deal-card.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft, rgba(37, 99, 235, 0.08));
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.stock-offer-deal-card-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.stock-offer-deal-card-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+.stock-offer-bogo-tag {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+
+.stock-offer-deal-card-meta {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.stock-offer-percent-modal {
+  max-width: 420px;
+  width: 100%;
+}
+
+.stock-offer-percent-lead {
+  margin: 0.5rem 0 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.stock-offer-percent-preview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0.85rem 0 1.1rem;
+}
+
+.stock-offer-percent-preview > div {
+  padding: 0.7rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.stock-offer-percent-preview span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.stock-offer-percent-preview strong {
+  font-size: 1.05rem;
+}
+
+.stock-offer-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

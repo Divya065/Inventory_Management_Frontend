@@ -16,5 +16,20 @@ namespace Project_1.Dtos.Offer
         [MaxLength(280, ErrorMessage = "Content cannot be over 280 characters")]
         [JsonProperty("content")]
         public string Content { get; set; } = String.Empty;
+
+        [JsonProperty("isBuyOneGetOne")]
+        public bool IsBuyOneGetOne { get; set; }
+
+        [JsonProperty("buyQty")]
+        [Range(0, 100)]
+        public int BuyQty { get; set; }
+
+        [JsonProperty("getQty")]
+        [Range(0, 100)]
+        public int GetQty { get; set; }
+
+        [JsonProperty("discountPercent")]
+        [Range(0, 100)]
+        public decimal DiscountPercent { get; set; }
     }
 }

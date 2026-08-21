@@ -14,13 +14,13 @@ namespace Project_1.Controllers
     public class OfferController : ControllerBase
     {
         private readonly IOfferRepository _offerRepo;
-        private readonly IStockRepository _stockRepo;
+        private readonly IProductRepository _productRepo;
         private readonly UserManager<AppUser> _userManager;
 
-        public OfferController(IOfferRepository offerRepo, IStockRepository stockRepo, UserManager<AppUser> userManager)
+        public OfferController(IOfferRepository offerRepo, IProductRepository productRepo, UserManager<AppUser> userManager)
         {
             _offerRepo = offerRepo;
-            _stockRepo = stockRepo;
+            _productRepo = productRepo;
             _userManager = userManager;
         }
 
@@ -44,9 +44,9 @@ namespace Project_1.Controllers
             return Ok(offer.ToOfferDto());
         }
 
-        [HttpPost("{stockId:int}")]
+        [HttpPost("{productId:int}")]
         [Authorize]
-        public async Task<IActionResult> Create([FromRoute] int stockId)
+        public async Task<IActionResult> Create([FromRoute] int productId)
         {
             Request.EnableBuffering();
             Request.Body.Position = 0;
@@ -82,9 +82,6 @@ namespace Project_1.Controllers
             if (offerDto.Content.Length > 280)
                 return BadRequest(new { message = "Content cannot be over 280 characters", field = "content" });
 
-            if (!await _stockRepo.stockExist(stockId))
-                return NotFound("Stock not found");
-
             var username = User.GetUsername();
             if (string.IsNullOrEmpty(username))
                 return Unauthorized("User not authenticated");
@@ -93,7 +90,10 @@ namespace Project_1.Controllers
             if (appUser == null)
                 return Unauthorized("User not found");
 
-            var offerModel = offerDto.ToOfferFromCreate(stockId);
+            if (!await _productRepo.ProductExists(productId, appUser.Id))
+                return NotFound("Product not found");
+
+            var offerModel = offerDto.ToOfferFromCreate(productId);
             offerModel.AppUserId = appUser.Id;
 
             await _offerRepo.CreateAsync(offerModel);

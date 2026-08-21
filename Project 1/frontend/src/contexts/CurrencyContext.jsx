@@ -20,17 +20,18 @@ const LOCALE_FOR = {
   EUR: 'en-IE',
 }
 
-export const CurrencyProvider = ({ children }) => {
-  const [currency, setCurrency] = useState('INR')
+const readStoredCurrency = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved && RATES_FROM_INR[saved]) return saved
+  } catch {
+    // ignore
+  }
+  return 'INR'
+}
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved && RATES_FROM_INR[saved]) setCurrency(saved)
-    } catch {
-      // ignore
-    }
-  }, [])
+export const CurrencyProvider = ({ children }) => {
+  const [currency, setCurrency] = useState(readStoredCurrency)
 
   useEffect(() => {
     try {
@@ -96,4 +97,3 @@ export const useCurrency = () => {
   if (!ctx) throw new Error('useCurrency must be used within CurrencyProvider')
   return ctx
 }
-

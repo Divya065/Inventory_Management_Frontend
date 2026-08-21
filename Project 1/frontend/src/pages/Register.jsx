@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import AppLogo from '../components/AppLogo'
 import './Auth.css'
 
 const Register = () => {
@@ -34,7 +35,7 @@ const Register = () => {
       const user = sessionStorage.getItem('user')
       
       if (token && user) {
-        navigate('/')
+        navigate('/plans')
       } else {
         setError('Registration successful but token not saved. Please try again.')
       }
@@ -50,7 +51,9 @@ const Register = () => {
       <div className="auth-shell">
         <aside className="auth-showcase">
           <div className="auth-brand">
-            <span className="auth-brand-mark">IM</span>
+            <span className="auth-brand-mark">
+              <AppLogo size={42} />
+            </span>
             <span>Inventory Management</span>
           </div>
           <h1>Create your business workspace in seconds.</h1>

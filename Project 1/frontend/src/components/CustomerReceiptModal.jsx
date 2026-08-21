@@ -2,18 +2,52 @@ import { createPortal } from 'react-dom'
 import { useCurrency } from '../contexts/CurrencyContext'
 import './CustomerReceiptModal.css'
 
+function parseReceiptItems(transaction) {
+  const raw = transaction?.itemsJson
+  if (raw) {
+    try {
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item) => ({
+          name: item.name || item.symbol || 'Item',
+          quantity: item.quantity > 0 ? item.quantity : 1,
+          offerTitle: item.offerTitle || null,
+          expiryDate: item.expiryDate || null,
+          expiryStatus: item.expiryStatus || item.batchStatus || null,
+        }))
+      }
+    } catch {
+      /* fall through to summary */
+    }
+  }
+
+  const summary = transaction?.itemsSummary
+  if (!summary) return []
+  return summary
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const m = line.match(/^(.*)\s+x(\d+)\s*$/i)
+      if (m) return { name: m[1].trim(), quantity: Number(m[2]) || 1 }
+      return { name: line, quantity: 1 }
+    })
+}
+
+function formatExpiry(value) {
+  if (!value) return null
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return String(value).slice(0, 10)
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 function ReceiptBody({ transaction, storeTitle = 'Sales receipt' }) {
   const { formatMoney } = useCurrency()
-  const { id, customerName, total, itemsSummary, paymentMethod, createdOn } = transaction || {}
+  const { id, customerName, total, paymentMethod, createdOn } = transaction || {}
   const dateStr = createdOn
     ? new Date(createdOn).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     : '—'
-  const itemsLines = itemsSummary
-    ? itemsSummary
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : []
+  const items = parseReceiptItems(transaction)
 
   return (
     <div className="customer-receipt-bill">
@@ -43,10 +77,29 @@ function ReceiptBody({ transaction, storeTitle = 'Sales receipt' }) {
       </dl>
       <section className="customer-receipt-bill-items">
         <h2 className="customer-receipt-bill-items-heading">Items</h2>
-        {itemsLines.length > 0 ? (
+        {items.length > 0 ? (
           <ul className="customer-receipt-bill-items-list">
-            {itemsLines.map((line, i) => (
-              <li key={i}>{line}</li>
+            {items.map((item, i) => (
+              <li key={i} className="customer-receipt-bill-item">
+                <div className="customer-receipt-bill-item-main">
+                  <span className="customer-receipt-bill-item-name">
+                    {item.name} × {item.quantity}
+                  </span>
+                  {item.offerTitle ? (
+                    <span className="customer-receipt-bill-item-offer">{item.offerTitle}</span>
+                  ) : null}
+                </div>
+                {(item.expiryDate || item.expiryStatus) && (
+                  <div className="customer-receipt-bill-item-meta">
+                    {item.expiryDate ? <span>Exp {formatExpiry(item.expiryDate)}</span> : null}
+                    {item.expiryStatus ? (
+                      <span className={`customer-receipt-expiry-status status-${String(item.expiryStatus).toLowerCase()}`}>
+                        {item.expiryStatus}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </li>
             ))}
           </ul>
         ) : (

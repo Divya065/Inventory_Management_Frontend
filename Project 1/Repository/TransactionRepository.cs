@@ -31,6 +31,59 @@ namespace Project_1.Repository
             return await query.OrderByDescending(t => t.CreatedOn).ToListAsync();
         }
 
+        public async Task<(List<Transaction> Items, int TotalCount)> GetPagedAsync(
+            string userId,
+            string? type,
+            DateTime? fromInclusive,
+            DateTime? toExclusive,
+            int page,
+            int pageSize)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return (new List<Transaction>(), 0);
+
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100;
+
+            var query = _context.Transactions.AsNoTracking().Where(t => t.AppUserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                var t = type.Trim();
+                query = query.Where(x => x.Type != null && x.Type.ToLower() == t.ToLower());
+            }
+
+            if (fromInclusive.HasValue)
+                query = query.Where(x => x.CreatedOn >= fromInclusive.Value);
+
+            if (toExclusive.HasValue)
+                query = query.Where(x => x.CreatedOn < toExclusive.Value);
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(x => x.CreatedOn)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, total);
+        }
+
+        public async Task<List<Transaction>> GetInRangeAsync(string userId, DateTime fromInclusive, DateTime toExclusive)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                return new List<Transaction>();
+
+            return await _context.Transactions
+                .AsNoTracking()
+                .Where(t => t.AppUserId == userId
+                    && t.CreatedOn >= fromInclusive
+                    && t.CreatedOn < toExclusive)
+                .OrderByDescending(t => t.CreatedOn)
+                .ToListAsync();
+        }
+
         public async Task<Transaction?> GetByIdAsync(int id)
         {
             return await _context.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);

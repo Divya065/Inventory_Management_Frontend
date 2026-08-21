@@ -61,10 +61,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  background: #fff;
-  color: var(--color-primary);
-  box-shadow: 0 16px 34px rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
+  line-height: 0;
+}
+
+.auth-brand-mark svg {
+  display: block;
 }
 
 .auth-showcase h1 {

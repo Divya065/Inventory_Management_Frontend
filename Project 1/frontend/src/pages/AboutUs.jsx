@@ -5,20 +5,20 @@ import './AboutUs.css'
 const FEATURES = [
   {
     id: 'inventory',
-    title: 'Inventory',
-    desc: 'Add and manage products with SKU, name, selling price, MRP, and live stock levels.',
-    accent: 'INV',
+    title: 'Products',
+    desc: 'Add items with company name, product name, barcode, expiry, selling price, MRP, and live quantities.',
+    accent: 'PRD',
   },
   {
     id: 'cart',
     title: 'Cart & checkout',
-    desc: 'Build a cart, record cash or online sales, and print customer receipts.',
+    desc: 'Scan or search to build a cart, park a waiting customer, then checkout with cash, card, or online pay.',
     accent: 'CRT',
   },
   {
     id: 'transactions',
     title: 'Transactions',
-    desc: 'Full purchase history with customer names, totals, and payment method.',
+    desc: 'Purchase history with customer, totals, payment method, receipts, and revert when stock must go back.',
     accent: 'TXN',
   },
   {
@@ -30,13 +30,13 @@ const FEATURES = [
   {
     id: 'dashboard',
     title: 'Dashboard',
-    desc: 'Sales KPIs, charts, low-stock alerts, and multi-currency views in one place.',
+    desc: 'Day close, sales charts, low stock, out of stock, and expiry alerts in one place.',
     accent: 'DSH',
   },
   {
     id: 'security',
     title: 'Secure access',
-    desc: 'Sign in to protect inventory, cart, transactions, and loan data.',
+    desc: 'Sign in to protect products, cart, transactions, and loan data.',
     accent: 'SEC',
   },
 ]
@@ -45,17 +45,17 @@ const STEPS = [
   {
     n: '01',
     title: 'Sign in',
-    desc: 'Create an account or log in. Inventory, cart, transactions, and loans require authentication.',
+    desc: 'Create an account or log in. Products, cart, transactions, and loans require authentication.',
   },
   {
     n: '02',
-    title: 'Set up inventory',
-    desc: 'Add products with selling price and original (MRP). Search, filter, and update stock anytime.',
+    title: 'Set up products',
+    desc: 'Add items with selling price, MRP, barcode, and expiry. Search and update quantities anytime.',
   },
   {
     n: '03',
     title: 'Sell or lend',
-    desc: 'Use the cart for purchases or loans. Dashboard and reports update automatically.',
+    desc: 'Use the cart for purchases or loans. Dashboard, day close, and reports update automatically.',
   },
 ]
 
@@ -67,10 +67,13 @@ const AboutUs = () => {
       <header className="about-hero">
         <div className="about-hero-inner">
           <p className="about-eyebrow">Inventory Management</p>
-          <h1>About this application</h1>
+          <h1>Control stock, sales, and credit from one workspace.</h1>
           <p className="about-lead">
-            A workspace for small and mid-sized businesses to run inventory, checkout, purchase history,
-            and customer loans from one place — with a clear dashboard and professional reporting.
+            Built for all sizes of business. Inventory Management keeps your product catalog,
+            counter checkout, sales records, and customer loans together in one secure place.
+          </p>
+          <p className="about-lead-sub">
+            Know what you have, what you sold, and what is still owed — then close the day with a clear picture.
           </p>
           <div className="about-hero-actions">
             {isAuthenticated ? (
@@ -87,8 +90,8 @@ const AboutUs = () => {
                 </Link>
               </>
             )}
-            <Link to="/stocks" className="btn btn-secondary">
-              View inventory
+            <Link to="/products" className="btn btn-secondary">
+              View products
             </Link>
           </div>
         </div>
@@ -96,19 +99,19 @@ const AboutUs = () => {
 
       <section className="about-highlights">
         <article className="about-highlight card">
-          <span className="about-highlight-label">Inventory</span>
-          <strong>Products & stock</strong>
-          <span className="about-highlight-meta">SKU, pricing, quantities</span>
+          <span className="about-highlight-label">Catalog</span>
+          <strong>Products &amp; stock</strong>
+          <span className="about-highlight-meta">Barcode, pricing, quantities</span>
         </article>
         <article className="about-highlight card">
           <span className="about-highlight-label">Sales</span>
           <strong>Cart & checkout</strong>
-          <span className="about-highlight-meta">Cash or online payment</span>
+          <span className="about-highlight-meta">Cash, card, or online</span>
         </article>
         <article className="about-highlight card">
           <span className="about-highlight-label">Insights</span>
           <strong>Dashboard</strong>
-          <span className="about-highlight-meta">Charts & alerts</span>
+          <span className="about-highlight-meta">Day close, charts &amp; alerts</span>
         </article>
         <article className="about-highlight card">
           <span className="about-highlight-label">Credit</span>

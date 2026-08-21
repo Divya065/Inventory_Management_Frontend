@@ -38,6 +38,10 @@ namespace Project_1.Repository
             if (existing == null) return null;
             existing.Title = m.Title;
             existing.Content = m.Content;
+            existing.IsBuyOneGetOne = m.IsBuyOneGetOne;
+            existing.BuyQty = m.BuyQty;
+            existing.GetQty = m.GetQty;
+            existing.DiscountPercent = m.DiscountPercent;
             await _context.SaveChangesAsync();
             return existing;
         }

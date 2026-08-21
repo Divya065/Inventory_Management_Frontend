@@ -128,7 +128,49 @@
 }
 
 .customer-receipt-bill-items-list li {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.customer-receipt-bill-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.customer-receipt-bill-item-name {
+  font-weight: 600;
+}
+
+.customer-receipt-bill-item-offer {
+  font-size: 0.85rem;
+  color: #0f766e;
+}
+
+.customer-receipt-bill-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.customer-receipt-expiry-status {
+  font-weight: 700;
+}
+
+.customer-receipt-expiry-status.status-new {
+  color: #15803d;
+}
+
+.customer-receipt-expiry-status.status-old {
+  color: #b45309;
+}
+
+.customer-receipt-expiry-status.status-expired {
+  color: #b91c1c;
 }
 
 .customer-receipt-bill-items-empty {

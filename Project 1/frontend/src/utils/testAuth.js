@@ -56,7 +56,7 @@ export const testAuth = {
     
     // Make a test request
     try {
-      const response = await fetch('/api/stock', {
+      const response = await fetch('/api/product', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

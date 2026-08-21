@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import AppLogo from '../components/AppLogo'
 import './Auth.css'
 
 const Login = () => {
@@ -34,15 +35,24 @@ const Login = () => {
         const user = sessionStorage.getItem('user')
         
         if (token && user) {
-          navigate('/')
+          let dest = '/plans'
+          try {
+            const parsed = JSON.parse(user)
+            const roles = parsed.Roles || parsed.roles || []
+            if (roles.includes('SuperAdmin')) dest = '/super-admin'
+            else if (parsed.Subscription?.hasAccess) dest = '/'
+          } catch {
+            dest = '/plans'
+          }
+          navigate(dest)
         } else {
-          setError('Error')
+          setError('Login succeeded but the session was not saved. Try again.')
         }
       } else {
-        setError('Error')
+        setError(result.error || 'Invalid username or password')
       }
     } catch (err) {
-      setError('Error')
+      setError(err?.message || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -53,7 +63,9 @@ const Login = () => {
       <div className="auth-shell">
         <aside className="auth-showcase">
           <div className="auth-brand">
-            <span className="auth-brand-mark">IM</span>
+            <span className="auth-brand-mark">
+              <AppLogo size={42} />
+            </span>
             <span>Inventory Management</span>
           </div>
           <h1>Control your stock, sales, and loans from one workspace.</h1>

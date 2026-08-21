@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import AppLogo from '../AppLogo'
 import './Header.css'
 
 const Header = () => {
@@ -10,7 +11,7 @@ const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const menuRef = useRef(null)
 
-  const isStocksActive = location.pathname.startsWith('/stocks')
+  const isProductsActive = location.pathname.startsWith('/products') || location.pathname.startsWith('/stocks')
 
   const handleLogout = () => {
     logout()
@@ -43,14 +44,7 @@ const Header = () => {
       <div className="header-container">
         <div className="header-brand">
           <div className="header-logo">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 10L16 6L26 10V24C26 25.1 25.1 26 24 26H8C6.9 26 6 25.1 6 24V10Z" fill="white" fillOpacity="0.95"/>
-              <path d="M6 10L16 6L26 10" stroke="#667eea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <rect x="9" y="13" width="5" height="5" rx="1" fill="#667eea"/>
-              <rect x="18" y="13" width="5" height="5" rx="1" fill="#667eea"/>
-              <rect x="9" y="19" width="5" height="5" rx="1" fill="#667eea"/>
-              <rect x="18" y="19" width="5" height="5" rx="1" fill="#667eea"/>
-            </svg>
+            <AppLogo size={40} />
           </div>
           <h1 className="header-title">Inventory Management</h1>
         </div>
@@ -78,10 +72,10 @@ const Header = () => {
               <>
                 <li>
                   <NavLink
-                    to="/stocks"
-                    className={isStocksActive ? 'header-nav-link active' : 'header-nav-link'}
+                    to="/products"
+                    className={isProductsActive ? 'header-nav-link active' : 'header-nav-link'}
                   >
-                    Inventory
+                    Products
                   </NavLink>
                 </li>
                 <li>

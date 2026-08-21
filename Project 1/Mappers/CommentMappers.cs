@@ -14,17 +14,17 @@ namespace Project_1.Mappers
                 Content = CommentModel.Content,
                 CreatedOn = CommentModel.CreatedOn,
                 CreatedBy = CommentModel.AppUser?.UserName,
-                StockId = CommentModel.StockId
+                ProductId = CommentModel.ProductId
             };
         }
 
-        public static Comment ToCommentFromCreate(this CreateCommentDto CommentDto, int stockId)
+        public static Comment ToCommentFromCreate(this CreateCommentDto CommentDto, int productId)
         {
             return new Comment
             {
                 Title = CommentDto.Title,
                 Content = CommentDto.Content,
-                StockId = stockId
+                ProductId = productId
             };
         }
 

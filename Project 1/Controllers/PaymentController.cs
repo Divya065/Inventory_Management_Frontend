@@ -8,6 +8,7 @@ using Project_1.Dtos.Payment;
 using Project_1.Dtos.Transaction;
 using Project_1.Extentions;
 using Project_1.Helpers;
+using Project_1.Filters;
 using Project_1.Interface;
 using Project_1.Models;
 using Project_1.Service;
@@ -19,6 +20,7 @@ namespace Project_1.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+    [RequireShopSubscription]
     public class PaymentController : ControllerBase
     {
         // App configuration settings (appsettings.json)
@@ -32,33 +34,32 @@ namespace Project_1.Controllers
         private readonly UserManager<AppUser> _userManager;
 
         // Used to read the cart items and update inventory/cart
-        private readonly IPortfolioRepository _portfolioRepo;
-        private readonly IStockRepository _stockRepo;
-
-        // Used to save the final Buy transaction (what you show in Transactions page)
+        private readonly ICartRepository _cartRepo;
+        private readonly IProductRepository _productRepo;
         private readonly ITransactionRepository _transactionRepo;
-
-        // Used to save a temporary payment-order record before payment succeeds
         private readonly IPaymentOrderRepository _paymentOrderRepo;
+        private readonly ICartParkingRepository _cartParkingRepo;
 
         public PaymentController(
             IOptions<UpiSettings> upiOptions,
             IOptions<RazorpaySettings> razorpayOptions,
             RazorpayService razorpayService,
             UserManager<AppUser> userManager,
-            IPortfolioRepository portfolioRepo,
-            IStockRepository stockRepo,
+            ICartRepository cartRepo,
+            IProductRepository productRepo,
             ITransactionRepository transactionRepo,
-            IPaymentOrderRepository paymentOrderRepo)
+            IPaymentOrderRepository paymentOrderRepo,
+            ICartParkingRepository cartParkingRepo)
         {
             _upi = upiOptions.Value;
             _razorpay = razorpayOptions.Value;
             _razorpayService = razorpayService;
             _userManager = userManager;
-            _portfolioRepo = portfolioRepo;
-            _stockRepo = stockRepo;
+            _cartRepo = cartRepo;
+            _productRepo = productRepo;
             _transactionRepo = transactionRepo;
             _paymentOrderRepo = paymentOrderRepo;
+            _cartParkingRepo = cartParkingRepo;
         }
 
         /// <summary>Merchant UPI details for building a pay QR (configure in appsettings.json → Upi).</summary>
@@ -115,12 +116,11 @@ namespace Project_1.Controllers
                 return Unauthorized(new { message = "User not found." });
 
             // Read cart items for this user
-            var cartItems = await _portfolioRepo.GetUserPortfolio(appUser);
+            var cartItems = await _cartRepo.GetUserCart(appUser);
             if (cartItems == null || cartItems.Count == 0)
                 return BadRequest(new { message = "Cart is empty. Add items before paying." });
 
-            // Server-side total from cart snapshot (important: we trust DB, not browser)
-            var total = cartItems.Sum(i => (i.Price) * (i.Quantity <= 0 ? 1 : i.Quantity));
+            var total = cartItems.Sum(i => (i.Price) * (i.ChargeableQuantity > 0 ? i.ChargeableQuantity : 1));
             if (total <= 0)
                 return BadRequest(new { message = "Cart total must be greater than 0." });
 
@@ -132,11 +132,22 @@ namespace Project_1.Controllers
                 return $"{name} x{qty}";
             }));
 
-            // Save a small “cart snapshot” so later we can reduce the correct stock quantities
-            var orderItems = cartItems.Select(i => new
+            // Save a cart snapshot for stock reduce + receipt (offer / expiry)
+            var orderItems = cartItems.Select(i =>
             {
-                stockId = i.Id,
-                quantity = i.Quantity <= 0 ? 1 : i.Quantity
+                var name = string.IsNullOrWhiteSpace(i.CompanyName) ? i.Symbol : i.CompanyName;
+                var qty = i.Quantity <= 0 ? 1 : i.Quantity;
+                return new
+                {
+                    productId = i.Id,
+                    stockId = i.Id,
+                    quantity = qty,
+                    symbol = i.Symbol,
+                    name,
+                    offerTitle = i.OfferTitle,
+                    expiryDate = i.ExpiryDate,
+                    expiryStatus = i.ExpiryStatus ?? ExpiryFreshness.Status(i.ExpiryDate)
+                };
             }).ToList();
 
             // Razorpay: receipt max 40 characters (longer values cause API errors).
@@ -263,17 +274,18 @@ namespace Project_1.Controllers
             // Validate stock availability first (so we don't partially reduce inventory)
             foreach (var it in items)
             {
-                var stock = await _stockRepo.GetByIdAsync(it.StockId);
+                var stock = await _productRepo.GetByIdAsync(it.ProductId > 0 ? it.ProductId : it.StockId, appUser.Id);
                 if (stock == null || stock.Quantity < it.Quantity)
                     return BadRequest(new { message = "Out of stock. One or more items are no longer available. Please create a new payment." });
             }
             foreach (var it in items)
             {
                 // Reduce inventory for each purchased item
-                await _stockRepo.ReduceQuantityAsync(it.StockId, it.Quantity);
+                await _productRepo.ReduceQuantityAsync(it.ProductId > 0 ? it.ProductId : it.StockId, it.Quantity, appUser.Id);
             }
             // Clear cart after successful payment
-            await _portfolioRepo.ClearUserPortfolioAsync(appUser.Id);
+            await _cartRepo.ClearUserCartAsync(appUser.Id);
+            await _cartParkingRepo.ClearActiveCustomerNameAsync(appUser.Id);
 
             // Create the final "Buy" transaction that appears in Transactions page
             var transaction = new Transaction
@@ -283,6 +295,7 @@ namespace Project_1.Controllers
                 Type = "Buy",
                 AppUserId = appUser.Id,
                 ItemsSummary = order.ItemsSummary,
+                ItemsJson = order.OrderItemsJson,
                 PaymentMethod = "Razorpay"
             };
             await _transactionRepo.CreateAsync(transaction);
@@ -302,12 +315,17 @@ namespace Project_1.Controllers
                 Type = transaction.Type,
                 CreatedOn = transaction.CreatedOn,
                 ItemsSummary = transaction.ItemsSummary,
-                PaymentMethod = transaction.PaymentMethod
+                ItemsJson = transaction.ItemsJson,
+                PaymentMethod = transaction.PaymentMethod,
+                CanRevert = true
             });
         }
 
         private class OrderItemLite
         {
+            [JsonProperty("productId")]
+            public int ProductId { get; set; }
+
             [JsonProperty("stockId")]
             public int StockId { get; set; }
 

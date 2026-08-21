@@ -217,7 +217,7 @@ body {
 
 .page-header,
 .stocks-header,
-.portfolio-header,
+.cart-header,
 .transactions-header,
 .loans-header,
 .stock-form-header,
@@ -232,7 +232,7 @@ body {
 
 .page-header h1,
 .stocks-header h1,
-.portfolio-header h1,
+.cart-header h1,
 .transactions-header h1,
 .loans-header h1,
 .stock-form-header h1,
@@ -256,7 +256,7 @@ body {
 .card,
 .feature-card,
 .stock-card,
-.portfolio-card,
+.cart-card,
 .add-stock-section {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -265,13 +265,13 @@ body {
 }
 
 .stock-card,
-.portfolio-card {
+.cart-card {
   padding: 1.25rem;
   transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
 }
 
 .stock-card:hover,
-.portfolio-card:hover {
+.cart-card:hover {
   box-shadow: var(--shadow-md);
   border-color: var(--color-border-strong);
   transform: translateY(-2px);
@@ -339,7 +339,7 @@ body {
 }
 
 .empty-state,
-.empty-portfolio {
+.empty-cart {
   text-align: center;
   padding: 3rem 2rem;
   background: var(--color-surface);
@@ -415,6 +415,7 @@ body {
 
 .badge-success { background: var(--color-success-bg); color: var(--color-success); }
 .badge-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.badge-info { background: var(--color-primary-soft); color: var(--color-primary); }
 .badge-danger { background: var(--color-danger-bg); color: var(--color-danger); }
 
 /* Panel cards (forms, details) */
@@ -478,7 +479,7 @@ body {
 }
 
 :root[data-theme='dark'] .empty-state,
-:root[data-theme='dark'] .empty-portfolio {
+:root[data-theme='dark'] .empty-cart {
   background: rgba(15, 23, 42, 0.86);
   border-color: rgba(148, 163, 184, 0.22);
   color: rgba(226, 232, 240, 0.72);

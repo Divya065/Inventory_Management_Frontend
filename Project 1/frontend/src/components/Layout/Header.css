@@ -46,12 +46,12 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+  padding: 0;
   border-radius: 10px;
-  padding: 0.4rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
+  line-height: 0;
 }
 
 .header-logo:hover {
@@ -60,8 +60,8 @@
 }
 
 .header-logo svg {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   display: block;
 }
 

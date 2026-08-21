@@ -1,0 +1,91 @@
+.barcode-camera-overlay {
+  z-index: 10050;
+}
+
+.barcode-camera-modal {
+  max-width: min(520px, 96vw);
+  width: 100%;
+  padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.barcode-camera-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.barcode-camera-head h3 {
+  margin: 0 0 0.25rem;
+}
+
+.barcode-camera-head p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.barcode-camera-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.barcode-camera-error {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 0.875rem;
+}
+
+.barcode-camera-reader {
+  overflow: hidden;
+  border-radius: var(--radius-md, 12px);
+  background: #0f172a;
+  min-height: 240px;
+}
+
+.barcode-camera-reader video {
+  border-radius: var(--radius-md, 12px);
+}
+
+.barcode-camera-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.barcode-camera-pick label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.barcode-camera-pick select {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.barcode-camera-tips {
+  margin: 0.85rem 0 0;
+  padding-left: 1.15rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.barcode-camera-tips li {
+  margin-bottom: 0.2rem;
+}

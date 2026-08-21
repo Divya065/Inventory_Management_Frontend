@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { authService } from '../services/authService'
+import { subscriptionService } from '../services/subscriptionService'
+import { mapSubscription } from '../utils/subscription'
 
 const AuthContext = createContext()
 
@@ -35,6 +37,23 @@ export const AuthProvider = ({ children }) => {
     }
 
     syncSession()
+    try {
+      const storedUser = sessionStorage.getItem('user')
+      const token = sessionStorage.getItem('token')
+      if (storedUser && token) {
+        const parsed = JSON.parse(storedUser)
+        const storedRoles = parsed.Roles || parsed.roles || []
+        if (!storedRoles.includes('SuperAdmin')) {
+          subscriptionService.getMine().then((data) => {
+            const next = { ...parsed, Subscription: mapSubscription({ subscription: data }) }
+            sessionStorage.setItem('user', JSON.stringify(next))
+            setUser(next)
+          }).catch(() => {})
+        }
+      }
+    } catch {
+      /* ignore stale session */
+    }
     window.addEventListener('auth:logout', handleLogout)
     return () => window.removeEventListener('auth:logout', handleLogout)
   }, [])
@@ -47,6 +66,7 @@ export const AuthProvider = ({ children }) => {
       const token = data?.Token || data?.token
       const userName = data?.UserName || data?.userName
       const email = data?.Email || data?.email
+      const roles = data?.Roles || data?.roles || []
       
       // Verify token exists in response
       if (!data || !token) {
@@ -60,7 +80,9 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         UserName: userName,
         Email: email,
-        Token: token
+        Token: token,
+        Roles: Array.isArray(roles) ? roles : [],
+        Subscription: mapSubscription(data)
       }
       
       // Store token and user data in sessionStorage (cleared on browser close)
@@ -128,6 +150,7 @@ export const AuthProvider = ({ children }) => {
       const token = data?.Token || data?.token
       const userName = data?.UserName || data?.userName
       const emailData = data?.Email || data?.email
+      const roles = data?.Roles || data?.roles || []
       
       // Verify token exists in response
       if (!data || !token) {
@@ -141,7 +164,9 @@ export const AuthProvider = ({ children }) => {
       const userData = {
         UserName: userName,
         Email: emailData,
-        Token: token
+        Token: token,
+        Roles: Array.isArray(roles) ? roles : [],
+        Subscription: mapSubscription(data)
       }
       
       // Store token and user data in sessionStorage (cleared on browser close)
@@ -190,12 +215,29 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  const refreshSubscription = (subscription) => {
+    setUser((current) => {
+      if (!current) return current
+      const next = { ...current, Subscription: subscription }
+      sessionStorage.setItem('user', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const roles = user?.Roles || user?.roles || []
+  const isSuperAdmin = roles.includes('SuperAdmin')
+  const hasActivePlan = isSuperAdmin || !!user?.Subscription?.hasAccess
+
   const value = {
     user,
     login,
     register,
     logout,
+    refreshSubscription,
     isAuthenticated: !!user && !!sessionStorage.getItem('token'),
+    isSuperAdmin,
+    hasActivePlan,
+    roles,
     loading,
   }
 

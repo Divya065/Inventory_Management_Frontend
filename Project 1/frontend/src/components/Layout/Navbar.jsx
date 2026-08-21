@@ -7,7 +7,7 @@ const Navbar = () => {
   const location = useLocation()
 
   // Check if current path starts with /stocks (for stock details, create, edit pages)
-  const isStocksActive = location.pathname.startsWith('/stocks')
+  const isProductsActive = location.pathname.startsWith('/products') || location.pathname.startsWith('/stocks')
 
   return (
     <nav className="navbar">
@@ -34,10 +34,10 @@ const Navbar = () => {
             <>
               <li>
                 <NavLink 
-                  to="/stocks" 
-                  className={isStocksActive ? 'nav-link active' : 'nav-link'}
+                  to="/products" 
+                  className={isProductsActive ? 'nav-link active' : 'nav-link'}
                 >
-                  Inventory
+                  Products
                 </NavLink>
               </li>
               <li>

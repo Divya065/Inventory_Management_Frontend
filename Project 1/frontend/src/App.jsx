@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { CurrencyProvider } from './contexts/CurrencyContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import Layout from './components/Layout/Layout'
+
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'

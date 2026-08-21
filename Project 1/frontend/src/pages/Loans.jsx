@@ -7,7 +7,7 @@ import './Loans.css'
 
 const Loans = () => {
   const { currency, formatMoney, convertToInr, convertFromInr } = useCurrency()
-  const { showConfirm, AppDialog } = useAppDialog()
+  const { showConfirm, showAlert, AppDialog } = useAppDialog()
   const [loans, setLoans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -64,22 +64,54 @@ const Loans = () => {
   }
 
   const handleDeleteLoanEntry = async (id) => {
-    const ok = await showConfirm('Delete this loan/payment entry?', {
-      title: 'Delete entry',
-      confirmText: 'Delete',
-    })
+    const ok = await showConfirm(
+      'Delete removes this entry from history only. Inventory / outstanding is not corrected. Use Revert to undo properly.',
+      {
+        title: 'Delete entry?',
+        confirmText: 'Delete',
+      }
+    )
     if (!ok) return
     try {
       setError('')
       await transactionService.deleteOne(id)
       if (detailModal?.customerName) {
         const data = await transactionService.getLoansByCustomer(detailModal.customerName)
-        setDetailModal(prev => ({ ...prev, transactions: Array.isArray(data) ? data : [] }))
+        setDetailModal((prev) => ({ ...prev, transactions: Array.isArray(data) ? data : [] }))
       }
       await loadLoans()
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to delete entry')
       console.error('Error deleting loan entry:', err)
+    }
+  }
+
+  const handleRevertLoanEntry = async (id, type) => {
+    const isPayment = String(type || '').toLowerCase() === 'loanpayment'
+    const ok = await showConfirm(
+      isPayment
+        ? 'Revert payment removes this payment so the outstanding loan increases again.'
+        : 'Revert loan puts items back into inventory and removes this loan record.',
+      {
+        title: isPayment ? 'Revert payment?' : 'Revert loan?',
+        confirmText: 'Revert',
+      }
+    )
+    if (!ok) return
+    try {
+      setError('')
+      const result = await transactionService.revert(id)
+      if (detailModal?.customerName) {
+        const data = await transactionService.getLoansByCustomer(detailModal.customerName)
+        setDetailModal((prev) => ({ ...prev, transactions: Array.isArray(data) ? data : [] }))
+      }
+      await loadLoans()
+      await showAlert(result?.message || 'Reverted successfully.', { variant: 'success' })
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to revert'
+      setError(msg)
+      await showAlert(msg, { variant: 'error' })
+      console.error('Error reverting loan entry:', err)
     }
   }
 
@@ -274,23 +306,36 @@ const Loans = () => {
                               {t.type === 'LoanPayment' ? '−' : ''}{formatMoney(t.total)}
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="transaction-delete-icon"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteLoanEntry(t.id)
-                                }}
-                                title="Delete this entry"
-                                aria-label="Delete this entry"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                  <line x1="10" y1="11" x2="10" y2="17" />
-                                  <line x1="14" y1="11" x2="14" y2="17" />
-                                </svg>
-                              </button>
+                              <div className="transaction-row-actions">
+                                {t.canRevert ? (
+                                  <button
+                                    type="button"
+                                    className="transaction-revert-btn"
+                                    onClick={() => handleRevertLoanEntry(t.id, t.type)}
+                                    title={
+                                      String(t.type || '').toLowerCase() === 'loanpayment'
+                                        ? 'Revert payment'
+                                        : 'Revert loan — restore stock'
+                                    }
+                                  >
+                                    Revert
+                                  </button>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  className="transaction-delete-icon"
+                                  onClick={() => handleDeleteLoanEntry(t.id)}
+                                  title="Delete history only"
+                                  aria-label="Delete this entry"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    <line x1="10" y1="11" x2="10" y2="17" />
+                                    <line x1="14" y1="11" x2="14" y2="17" />
+                                  </svg>
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))

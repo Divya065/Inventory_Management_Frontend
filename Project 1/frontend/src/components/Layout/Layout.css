@@ -1,27 +1,144 @@
 .app-shell {
+
   display: flex;
+
   min-height: 100vh;
+
   width: 100%;
+
 }
+
+
 
 .app-main {
+
   flex: 1;
+
   display: flex;
+
   flex-direction: column;
+
   min-width: 0;
+
   background: var(--color-bg);
+
 }
+
+
 
 .app-content {
+
   flex: 1;
+
   padding: 1.75rem 2rem 2rem;
+
   max-width: none;
+
   width: 100%;
+
   box-sizing: border-box;
+
 }
 
-@media (max-width: 768px) {
-  .app-content {
-    padding: 1rem;
-  }
+
+
+.plan-banner {
+
+  margin: 0.85rem 2rem 0;
+
+  padding: 0.7rem 1rem;
+
+  border-radius: 12px;
+
+  background: var(--color-warning-bg);
+
+  color: var(--color-warning);
+
+  font-size: 0.9rem;
+
+  font-weight: 600;
+
 }
+
+
+
+.plan-banner a {
+
+  color: inherit;
+
+  text-decoration: underline;
+
+}
+
+
+
+.sidebar-backdrop {
+
+  display: none;
+
+}
+
+
+
+@media (max-width: 1024px) {
+
+  .sidebar-backdrop {
+
+    display: block;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(15, 23, 42, 0.45);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.2s ease;
+
+    z-index: 70;
+
+  }
+
+
+
+  .app-shell--nav-open .sidebar-backdrop {
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+  }
+
+
+
+  .plan-banner {
+
+    margin: 0.75rem 1rem 0;
+
+  }
+
+
+
+  .app-content {
+
+    padding: 1rem;
+
+  }
+
+}
+
+
+
+@media (max-width: 768px) {
+
+  .app-content {
+
+    padding: 0.85rem;
+
+  }
+
+}
+

@@ -1,0 +1,128 @@
+.subscription {
+  padding: 0;
+}
+
+.subscription-hero {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 18px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background:
+    radial-gradient(circle at 92% 20%, rgba(14, 165, 233, 0.28), transparent 32%),
+    linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%);
+}
+
+.subscription-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.subscription-hero h1 {
+  margin: 0;
+  color: #fff;
+  letter-spacing: -0.04em;
+}
+
+.subscription-hero .page-subtitle {
+  margin: 0.45rem 0 0;
+  color: #dbeafe;
+}
+
+.subscription-current {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1.2rem 1.3rem;
+  margin-bottom: 1.1rem;
+}
+
+.subscription-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.subscription-muted,
+.subscription-lock-note {
+  color: var(--color-text-muted);
+}
+
+.subscription-lock-note {
+  margin: 0 0 1rem;
+}
+
+.subscription-badge {
+  display: inline-flex;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.subscription-badge.is-active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.subscription-badge.is-expiringsoon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.subscription-badge.is-expired,
+.subscription-badge.is-neversubscribed {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.subscription-plans {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+}
+
+.subscription-plan {
+  padding: 1.25rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.subscription-plan h2 {
+  margin: 0;
+}
+
+.subscription-length {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.subscription-price {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+}
+
+.subscription-plan p {
+  margin: 0 0 0.6rem;
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+
+@media (max-width: 900px) {
+  .subscription-current,
+  .subscription-plans {
+    grid-template-columns: 1fr;
+  }
+}

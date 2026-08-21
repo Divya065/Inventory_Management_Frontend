@@ -7,25 +7,28 @@ import './AppTopbar.css'
 
 const PAGE_TITLES = {
   '/': 'Dashboard',
-  '/about': 'About',
-  '/stocks': 'Inventory',
+  '/super-admin': 'Super Admin',
+  '/products': 'Products',
   '/cart': 'Cart',
   '/transactions': 'Transactions',
   '/loans': 'Loans',
+  '/plans': 'Plans',
+  '/subscription': 'Plans',
+  '/about': 'About',
   '/login': 'Sign in',
   '/register': 'Register',
 }
 
 const getPageTitle = (pathname) => {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
-  if (pathname.startsWith('/stocks/create')) return 'Add item'
-  if (pathname.match(/^\/stocks\/\d+\/edit$/)) return 'Edit item'
-  if (pathname.match(/^\/stocks\/\d+$/)) return 'Item details'
+  if (pathname.startsWith('/products/create') || pathname.startsWith('/stocks/create')) return 'Add item'
+  if (pathname.match(/^\/products\/\d+\/edit$/) || pathname.match(/^\/stocks\/\d+\/edit$/)) return 'Edit item'
+  if (pathname.match(/^\/products\/\d+$/) || pathname.match(/^\/stocks\/\d+$/)) return 'Item details'
   return 'Inventory Management'
 }
 
-const AppTopbar = () => {
-  const { user, isAuthenticated, logout } = useAuth()
+const AppTopbar = ({ onMenuClick, menuOpen = false }) => {
+  const { user, isAuthenticated, isSuperAdmin, hasActivePlan, logout } = useAuth()
   const { currency, setCurrency, supported } = useCurrency()
   const { theme, toggle } = useTheme()
   const navigate = useNavigate()
@@ -54,6 +57,18 @@ const AppTopbar = () => {
   return (
     <header className="app-topbar">
       <div className="app-topbar-context">
+        <button
+          type="button"
+          className={`app-topbar-menu${menuOpen ? ' is-open' : ''}`}
+          onClick={onMenuClick}
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={menuOpen}
+          aria-controls="app-sidebar"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
         <span className="app-topbar-app-name">Inventory Management</span>
         <span className="app-topbar-sep" aria-hidden>/</span>
         <span className="app-topbar-page">{pageTitle}</span>
@@ -109,9 +124,11 @@ const AppTopbar = () => {
                 </div>
               )}
             </div>
+            {!isSuperAdmin && hasActivePlan && (
             <Link to="/cart" className="app-topbar-new-sale">
               New sale
             </Link>
+            )}
             <button type="button" className="app-topbar-user" onClick={() => setShowMenu(!showMenu)}>
               <span className="app-topbar-avatar">
                 {(user.UserName || user.userName || 'U').charAt(0).toUpperCase()}

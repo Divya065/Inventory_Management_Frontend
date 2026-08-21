@@ -4,6 +4,6 @@ namespace Project_1.Interface
 {
     public interface ITokenService
     {
-        String CreateToken(AppUser user);
+        string CreateToken(AppUser user, IEnumerable<string>? roles = null);
     }
 }

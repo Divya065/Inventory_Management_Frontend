@@ -19,7 +19,7 @@ namespace Project_1.Dtos.Transaction
         [MaxLength(20)]
         public string Type { get; set; } = "Buy"; // "Buy" or "Loan"
 
-        /// <summary>For Buy only: Cash or UPI. Optional; defaults to Cash when omitted.</summary>
+        /// <summary>For Buy only: Cash, Card, or UPI. Optional; defaults to Cash when omitted.</summary>
         [MaxLength(20)]
         public string? PaymentMethod { get; set; }
     }

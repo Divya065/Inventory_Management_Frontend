@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Project_1.Data;
 using Project_1.Dtos.Account;
+using Project_1.Helpers;
 using Project_1.Interface;
 using Project_1.Models;
 using Project_1.Service;
@@ -42,17 +43,20 @@ namespace Project_1.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(new { message = "Invalid request data", errors = ModelState });
 
-                var user = await _userManager.Users.FirstOrDefaultAsync(s => s.UserName == (loginDto.UserName ?? "").ToLower());
+                var user = await _userManager.FindByNameAsync(loginDto.UserName);
                 if (user == null)
                     return Unauthorized(new { message = "Invalid username or password" });
+
+                if (!user.IsActive)
+                    return Unauthorized(new { message = "This shop account is suspended. Contact the platform administrator." });
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
                 if (!result.Succeeded)
                     return Unauthorized(new { message = "Invalid username or password" });
 
-                // Create token
-                var token = _tokenService.CreateToken(user);
+                var roles = await _userManager.GetRolesAsync(user);
+                var token = _tokenService.CreateToken(user, roles);
                 
                 // Verify token was created
                 if (string.IsNullOrEmpty(token))
@@ -65,7 +69,9 @@ namespace Project_1.Controllers
                     {
                         UserName = user.UserName ?? "",
                         Email = user.Email ?? "",
-                        Token = token
+                        Token = token,
+                        Roles = roles.ToList(),
+                        Subscription = SubscriptionHelper.ToDto(user)
                     }
                 );
             }
@@ -117,11 +123,18 @@ namespace Project_1.Controllers
                     return BadRequest(new { message = "Email already registered" });
                 }
 
-                // Create new user
+                // Create new user — no plan yet; trial starts only when they tap Get on Plans
                 var appUser = new AppUser
                 {
                     UserName = registerDto.Username,
                     Email = registerDto.Email,
+                    ShopName = registerDto.Username,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    SubscriptionPlan = SubscriptionHelper.None,
+                    HasUsedTrial = false,
+                    PlanStartedAt = null,
+                    PlanExpiresAt = null,
                 };
 
                 // Create user - this automatically saves to database
@@ -150,12 +163,15 @@ namespace Project_1.Controllers
                             return StatusCode(500, new { message = "User registration completed but verification failed" });
                         }
 
+                        var shopRoles = await _userManager.GetRolesAsync(verifiedUser);
                         return Ok(
                             new NewUserDto
                             {
                                 UserName = verifiedUser.UserName,
                                 Email = verifiedUser.Email,
-                                Token = _tokenService.CreateToken(verifiedUser)
+                                Token = _tokenService.CreateToken(verifiedUser, shopRoles),
+                                Roles = shopRoles.ToList(),
+                                Subscription = SubscriptionHelper.ToDto(verifiedUser)
                             }
                         );
                     }

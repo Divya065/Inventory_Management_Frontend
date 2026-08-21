@@ -4,29 +4,23 @@ const ThemeContext = createContext(null)
 
 const STORAGE_KEY = 'inventory-management.theme'
 
+const readStoredTheme = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved === 'dark' || saved === 'light') return saved
+  } catch {
+    // ignore
+  }
+  try {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
+  } catch {
+    // ignore
+  }
+  return 'light'
+}
+
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light')
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved === 'dark' || saved === 'light') {
-        setTheme(saved)
-        return
-      }
-    } catch {
-      // ignore
-    }
-
-    // fallback to system preference
-    try {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        setTheme('dark')
-      }
-    } catch {
-      // ignore
-    }
-  }, [])
+  const [theme, setTheme] = useState(readStoredTheme)
 
   useEffect(() => {
     try {
@@ -36,6 +30,11 @@ export const ThemeProvider = ({ children }) => {
     }
     document.documentElement.dataset.theme = theme
   }, [theme])
+
+  // Apply immediately on first paint too (covers SSR/hydration edge cases)
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [])
 
   const value = useMemo(() => {
     const toggle = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
@@ -50,4 +49,3 @@ export const useTheme = () => {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
   return ctx
 }
-

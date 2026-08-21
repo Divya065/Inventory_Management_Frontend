@@ -12,5 +12,12 @@ namespace Project_1.Dtos.Offer
         [MinLength(5)]
         [MaxLength(280)]
         public string Content { get; set; } = String.Empty;
+        public bool IsBuyOneGetOne { get; set; }
+        [Range(0, 100)]
+        public int BuyQty { get; set; }
+        [Range(0, 100)]
+        public int GetQty { get; set; }
+        [Range(0, 100)]
+        public decimal DiscountPercent { get; set; }
     }
 }
