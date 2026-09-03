@@ -382,3 +382,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Cursor IDE local rules (do not publish)
+.cursor/
